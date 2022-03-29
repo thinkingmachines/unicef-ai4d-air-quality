@@ -1,4 +1,20 @@
 repos:
+  - repo: https://github.com/mwouts/jupytext
+    rev: v1.13.1  # CURRENT_TAG/COMMIT_HASH
+    hooks:
+    - id: jupytext
+      args: [--from, ipynb, --to, "py:percent", --pipe, black, --pipe, "isort - --profile black"]
+      stages:
+        - commit
+      additional_dependencies:
+        - jupytext
+        - black
+        - isort
+  - repo: https://github.com/tomcatling/black-nb
+    rev: 0.3.0
+    hooks:
+      - id: black-nb
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
     hooks:
@@ -13,7 +29,7 @@ repos:
         args: [ "--fix=lf" ]
 
   - repo: https://github.com/psf/black
-    rev: 21.10b0
+    rev: 22.3.0
     hooks:
       - id: black
         language_version: python3
@@ -27,14 +43,3 @@ repos:
     rev: 5.10.1
     hooks:
       - id: isort
-
-  - repo: local
-    hooks:
-      - id: pyright
-        name: pyright
-        entry: pyright
-        language: node
-        language_version: 14.4.0
-        pass_filenames: false
-        types: [python]
-        additional_dependencies: ['pyright@1.1.119']

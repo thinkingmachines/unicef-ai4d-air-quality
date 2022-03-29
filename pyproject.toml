@@ -1,23 +1,18 @@
 [tool.poetry]
-name = "ml-workflow-template"
+name = "unicef-ai4d-air-quality"
 version = "0.1.0"
-description = """A workflow template for ML projects that provides the step-by-step
-ML project checklist as well as the supporting code templates, notebooks,
-and infrastructure files."""
+description = """Repo for providing code to replicate air quality research work and utilize any trained models that are released."""
 authors = []
 
 [tool.poetry.dependencies]
-python = "^3.7.1"
-loguru = "^0.5.3"
-pandas = "^1.3.3"
-numpy = "^1.21.1"
-missingno = "^0.5.0"
+python = "~3.7"
 
 [tool.poetry.dev-dependencies]
-black = "21.9b0"
-flake8 = "^4.0.1"
-pre-commit = "^2.14.1"
-pytest = "^6.2.4"
+pre-commit = "^2.17.0"
+ipykernel = "^6.10.0"
+jupyter = "^1.0.0"
+jupyterlab = "^3.3.2"
+
 
 [tool.black]
 line-length = 88
