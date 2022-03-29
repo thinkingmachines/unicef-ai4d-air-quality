@@ -1,0 +1,57 @@
+[tool.poetry]
+name = "ml-workflow-template"
+version = "0.1.0"
+description = """A workflow template for ML projects that provides the step-by-step
+ML project checklist as well as the supporting code templates, notebooks,
+and infrastructure files."""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.7.1"
+loguru = "^0.5.3"
+pandas = "^1.3.3"
+numpy = "^1.21.1"
+missingno = "^0.5.0"
+
+[tool.poetry.dev-dependencies]
+black = "21.9b0"
+flake8 = "^4.0.1"
+pre-commit = "^2.14.1"
+pytest = "^6.2.4"
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+  | foo.py           # also separately exclude a file named foo.py in
+                     # the root of the project
+)
+'''
+
+[tool.isort]
+# for compatibility with black
+# https://black.readthedocs.io/en/stable/the_black_code_style.html?highlight=isort#how-black-wraps-lines
+
+multi_line_output = 3
+include_trailing_comma = "True"
+force_grid_wrap = 0
+use_parentheses = "True"
+ensure_newline_before_comments = "True"
+line_length = 88
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
