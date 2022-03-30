@@ -65,17 +65,28 @@ make dev
 
 ## 📦 Dependencies
 
-Over the course of development, you might introduce new library dependencies. When you do so, please add it in `poetry` along with your commits so that other devs can get the updated list of project requirements.
+Over the course of development, you might introduce new library dependencies. When you do so, please add it in the `requirements.*` files and include those with your commits so that other devs can get the updated list of project requirements.
 
-For example, to add `pandas` as a dependency, run:
+For example, to add `pandas` as a dependency:
+
+1. Add it to `requirements.in`:
 ```bash
-poetry add pandas
+# Sample requirements.in contents
+numpy
+pandas
 ```
 
-To update your local conda env and sync it with the dependencies listed in the poetry files (e.g. after you pull changes from GitHub), run:
-```bash
-poetry install
+2. Run `pip-compile` to re-generate the `requirements.txt` file.
 ```
+pip-compile -v -o requirements.txt requirements.in
+```
+
+3. Finally, run `pip-sync` to make your local env follow `requirements.txt` exactly.
+```
+pip-sync requirements.txt
+```
+`pip-sync` is also handy for updating your local conda env after you pull changes from GitHub, if another developer has added new requirements.
+
 
 <br/>
 <br/>
