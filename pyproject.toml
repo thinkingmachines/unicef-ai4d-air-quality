@@ -1,19 +1,3 @@
-[tool.poetry]
-name = "unicef-ai4d-air-quality"
-version = "0.1.0"
-description = """Repo for providing code to replicate air quality research work and utilize any trained models that are released."""
-authors = []
-
-[tool.poetry.dependencies]
-python = "~3.7"
-
-[tool.poetry.dev-dependencies]
-pre-commit = "^2.17.0"
-ipykernel = "^6.10.0"
-jupyter = "^1.0.0"
-jupyterlab = "^3.3.2"
-
-
 [tool.black]
 line-length = 88
 include = '\.pyi?$'
