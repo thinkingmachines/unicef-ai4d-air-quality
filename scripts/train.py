@@ -1,11 +1,15 @@
+import json
 import os
+from datetime import datetime
 
 import click
+import joblib
 import pandas as pd
 import yaml
 from loguru import logger
 
 from src import settings
+from src.modelling import model_utils
 from src.models import ExperimentConfig
 
 
@@ -17,14 +21,12 @@ from src.models import ExperimentConfig
 )
 def train(config_path):
 
-    # Load and validate config file
+    # Experiment Configuration: Load and validate yaml #
     with open(config_path, "r") as config_file:
         config = yaml.safe_load(config_file)
     config = ExperimentConfig.parse_obj(config)
 
-    # Prepare output dir
-    if not os.path.exists(config.out_dir):
-        os.makedirs(config.out_dir, exist_ok=True)
+    # Data Preparation #
 
     # Read in data
     data_df = pd.read_csv(config.data_params.csv_path)
@@ -42,21 +44,28 @@ def train(config_path):
     X = data_df[feature_cols]
     y = data_df[target_col].values
 
-    # TODO: Train Model
-    # result = model_utils.nested_cv(c, X, y)
-    # print("\nNested CV results: {}".format(result))
+    # Model Training
+    result = model_utils.nested_cv(config.dict(), X, y)
+    logger.info("\nNested CV results: {}".format(result))
 
-    # cv = model_utils.get_cv(c)
-    # cv.fit(X, y)
+    cv = model_utils.get_cv(config.dict())
+    cv.fit(X, y)
 
-    # print("Best estimator: {}".format(cv.best_estimator_))
+    logger.info("Best estimator: {}".format(cv.best_estimator_))
 
-    # # Save results
-    # with open(out_dir + "results.json", "w") as f:
-    #     json.dump(result, f)
+    # Serialize Model and Results #
 
-    # # Save Model
-    # joblib.dump(cv.best_estimator_, out_dir + "best_model.pkl")
+    # Prepare output dir
+    out_dir = config.out_dir / datetime.today().strftime("%Y-%m-%d-%H_%M_%S")
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir, exist_ok=True)
+
+    # Save results
+    with open(out_dir / "results.json", "w") as f:
+        json.dump(result, f)
+
+    # Save Model
+    joblib.dump(cv.best_estimator_, out_dir / "best_model.pkl")
 
 
 if __name__ == "__main__":
