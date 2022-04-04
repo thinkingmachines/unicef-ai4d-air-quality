@@ -40,6 +40,7 @@ charset-normalizer==2.0.12
     # via requests
 click==8.1.0
     # via
+    #   -r requirements.in
     #   black
     #   click-plugins
     #   cligj
@@ -143,6 +144,8 @@ jinja2==3.1.1
     #   jupyterlab-server
     #   nbconvert
     #   notebook
+joblib==1.1.0
+    # via -r requirements.in
 json5==0.9.6
     # via jupyterlab-server
 jsonschema==4.4.0
@@ -184,6 +187,8 @@ jupyterlab-server==2.12.0
     # via jupyterlab
 jupyterlab-widgets==1.1.0
     # via ipywidgets
+loguru==0.6.0
+    # via -r requirements.in
 markupsafe==2.1.1
     # via
     #   jinja2
@@ -281,6 +286,8 @@ pyasn1-modules==0.2.8
     # via google-auth
 pycparser==2.21
     # via cffi
+pydantic==1.9.0
+    # via -r requirements.in
 pygments==2.11.2
     # via
     #   ipython
@@ -304,6 +311,8 @@ pytz==2022.1
     # via
     #   babel
     #   pandas
+pyyaml==6.0
+    # via -r requirements.in
 pyzmq==22.3.0
     # via
     #   jupyter-client
@@ -381,6 +390,7 @@ typing-extensions==4.1.1
     #   black
     #   importlib-metadata
     #   jsonschema
+    #   pydantic
 uritemplate==3.0.1
     # via google-api-python-client
 urllib3==1.26.9

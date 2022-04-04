@@ -1,0 +1,16 @@
+data_params:
+  csv_path: 'data/dhs_data.csv'
+  target_col: 'wealth_index'
+  ignore_cols: ['cluster', 'education']
+out_dir: 'data/outputs/'
+model_params:
+  model: 'LinearRegression'
+  scalers: ['MinMaxScaler', 'StandardScaler', 'RobustScaler']
+  selector_params:
+    selector: 'SelectKBest_f_regression'
+    k: ['range', 5, 10]
+  cv_params:
+    cv: 'TuneSearchCV'
+    refit: 'pearson_r2'
+    n_trials: 10
+    verbose: 0
