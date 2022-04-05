@@ -1,6 +1,7 @@
 import collections
 
 import numpy as np
+from loguru import logger
 from sklearn.model_selection import GridSearchCV, KFold, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
@@ -11,9 +12,9 @@ from sklearn.preprocessing import (
 )
 from tune_sklearn import TuneGridSearchCV, TuneSearchCV
 
-from src import settings
+from src.config import settings
+from src.config.models import ExperimentConfig
 from src.modelling import clf_utils, eval_utils, reg_utils
-from src.models import ExperimentConfig
 
 
 def _get_scalers(scalers):
@@ -117,9 +118,6 @@ def get_cv(c, seed=settings.SEED):
         object: The model selector instance.
     """
 
-    # pipe = _get_pipeline(c.model, c.selector)
-    # params = _get_params(c.scalers, c.model_params, c.selector_params)
-
     pipe = _get_pipeline(c["model"], c["selector"])
     params = _get_params(c["scalers"], c["model_params"], c["selector_params"])
     cv, cv_params = c["cv"], c["cv_params"]
@@ -152,6 +150,9 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED):
     outer_cv_result = {metric: [] for metric in eval_utils.get_scoring()}
 
     for index, (train_index, test_index) in enumerate(outer_cv.split(X)):
+
+        logger.info(f"Running Outer Fold: {index}")
+
         X_train, X_test = X.loc[train_index], X.loc[test_index]
         y_train, y_test = y[train_index], y[test_index]
 
@@ -164,7 +165,7 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED):
         for metric, value in result.items():
             outer_cv_result[metric].append(value)
 
-        print("Fold {}: {}".format(index, result))
+        logger.info(f"Outer Fold {index} Results: {result}")
 
     mean_results = {}
     for metric, values in outer_cv_result.items():

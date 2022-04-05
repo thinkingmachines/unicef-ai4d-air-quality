@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from src import settings
+from src.config import settings
 
 
 class CVParams(BaseModel):
@@ -19,7 +19,7 @@ class SelectorParams(BaseModel):
 class DataParams(BaseModel):
     csv_path: str
     target_col: str
-    ignore_cols: List = []
+    ignore_cols: List[str] = []
 
 
 class ExperimentConfig(BaseModel):

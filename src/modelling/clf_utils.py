@@ -19,7 +19,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC, LinearSVC, NuSVC
 from xgboost import XGBClassifier
 
-from src import settings
+from src.config import settings
 
 SELECTORS = [
     "SelectKBest",

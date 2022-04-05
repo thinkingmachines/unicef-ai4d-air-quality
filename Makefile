@@ -13,3 +13,8 @@ dev: ## Setup dev environment
 requirements:
 	pip-compile -v -o requirements.txt requirements.in
 	pip-sync requirements.txt
+
+
+train:
+	export PYTHONPATH=.
+	python scripts/train.py

@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from datetime import datetime
 
 import click
@@ -8,9 +9,9 @@ import pandas as pd
 import yaml
 from loguru import logger
 
-from src import settings
+from src.config import settings
+from src.config.models import ExperimentConfig
 from src.modelling import model_utils
-from src.models import ExperimentConfig
 
 
 @click.command()
@@ -39,14 +40,14 @@ def train(config_path):
         for feature in data_df.columns
         if feature not in config.data_params.ignore_cols + [target_col]
     ]
-    logger.info(f"Features: {feature_cols}, Target: {target_col}")
+    logger.info(f"Target: {target_col}, {len(feature_cols)} Features: {feature_cols}, ")
 
     X = data_df[feature_cols]
     y = data_df[target_col].values
 
     # Model Training
-    result = model_utils.nested_cv(config.dict(), X, y)
-    logger.info("\nNested CV results: {}".format(result))
+    nested_cv_results = model_utils.nested_cv(config.dict(), X, y)
+    logger.info(f"\nNested CV results: {json.dumps(nested_cv_results, indent=4)}")
 
     cv = model_utils.get_cv(config.dict())
     cv.fit(X, y)
@@ -56,16 +57,21 @@ def train(config_path):
     # Serialize Model and Results #
 
     # Prepare output dir
-    out_dir = config.out_dir / datetime.today().strftime("%Y-%m-%d-%H_%M_%S")
+    out_dir = config.out_dir / datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
     if not os.path.exists(out_dir):
         os.makedirs(out_dir, exist_ok=True)
 
     # Save results
-    with open(out_dir / "results.json", "w") as f:
-        json.dump(result, f)
+    with open(out_dir / "nested_cv_results.json", "w") as f:
+        json.dump(nested_cv_results, f, indent=4)
 
     # Save Model
     joblib.dump(cv.best_estimator_, out_dir / "best_model.pkl")
+    with open(out_dir / "best_model_params.txt", "w") as f:
+        print(str(cv.best_estimator_), file=f)
+
+    # Copy over config file so we keep track of the configuration
+    shutil.copyfile(config_path, out_dir / "config.yaml")
 
 
 if __name__ == "__main__":

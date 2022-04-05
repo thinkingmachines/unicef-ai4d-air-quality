@@ -23,7 +23,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.svm import SVR, LinearSVR, NuSVR
 from xgboost import XGBRegressor
 
-from src import settings
+from src.config import settings
 
 SEED = 42
 SELECTORS = [
