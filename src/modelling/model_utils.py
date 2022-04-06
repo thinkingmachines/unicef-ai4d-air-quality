@@ -84,6 +84,8 @@ def _get_params(scalers, model_params, selector_params):
             return list(np.linspace(*param[1:]).astype(int))
         elif param[0] == "range":
             return list(range(*param[1:]))
+        elif param[0] == "list":
+            return param[1:]
         return param
 
     scalers = {"scaler": _get_scalers(scalers)}
@@ -134,7 +136,11 @@ def get_cv(c, seed=settings.SEED):
         return TuneGridSearchCV(pipe, params, scoring=scoring, **cv_params)
     elif cv == "TuneSearchCV":
         return TuneSearchCV(
-            pipe, params, scoring=scoring, random_state=seed, **cv_params
+            pipe,
+            params,
+            scoring=scoring,
+            random_state=seed,
+            **cv_params,
         )
     elif cv == "RandomizedSearchCV":
         return RandomizedSearchCV(
@@ -144,9 +150,9 @@ def get_cv(c, seed=settings.SEED):
         return GridSearchCV(pipe, params, scoring=scoring, **cv_params)
 
 
-def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED):
+def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5):
 
-    outer_cv = KFold(n_splits=5, shuffle=True, random_state=seed)
+    outer_cv = KFold(n_splits=k, shuffle=True, random_state=seed)
     outer_cv_result = {metric: [] for metric in eval_utils.get_scoring()}
 
     for index, (train_index, test_index) in enumerate(outer_cv.split(X)):
