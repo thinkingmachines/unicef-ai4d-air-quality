@@ -6,16 +6,6 @@ from pydantic import BaseModel
 from src.config import settings
 
 
-class CVParams(BaseModel):
-    refit: str
-    n_trials: int
-    verbose: bool
-
-
-class SelectorParams(BaseModel):
-    k: List
-
-
 class DataParams(BaseModel):
     csv_path: str
     target_col: str
@@ -28,7 +18,7 @@ class ExperimentConfig(BaseModel):
     model: str
     model_params: Optional[dict]
     selector: str
-    selector_params: SelectorParams
+    selector_params: Optional[dict]
     cv: str
-    cv_params: CVParams
+    cv_params: Optional[dict]
     scalers: List[str]
