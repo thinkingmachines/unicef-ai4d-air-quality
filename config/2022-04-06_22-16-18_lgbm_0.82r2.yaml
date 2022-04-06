@@ -1,0 +1,20 @@
+cv: TuneSearchCV
+cv_params:
+  early_stopping: false
+  n_trials: 1
+  refit: pearson_r2
+  verbose: 0
+data_params:
+  csv_path: data/2022-04-06-base-table-air4thai.csv
+  ignore_cols:
+  - date
+  - station_code
+  - latitude
+  - longitude
+  target_col: aqi
+model: LGBMRegressor
+model_params: null
+out_dir: data/outputs/
+scalers:
+- StandardScaler
+selector: VarianceThreshold

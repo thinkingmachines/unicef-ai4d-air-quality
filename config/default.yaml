@@ -1,16 +1,15 @@
 data_params:
-  csv_path: 'data/dhs_data.csv'
-  target_col: 'wealth_index'
-  ignore_cols: ['cluster', 'education']
+  csv_path: 'data/2022-04-06-base-table-air4thai.csv'
+  target_col: 'aqi'
+  ignore_cols: ['date', 'station_code', 'latitude', 'longitude']
 out_dir: 'data/outputs/'
-model: 'XGBRegressor'
+model: 'LGBMRegressor'
 model_params:
-selector: 'SelectKBest_f_regression'
-selector_params:
-  k: ['range', 5, 10]
-scalers: ['MinMaxScaler', 'StandardScaler', 'RobustScaler']
+selector: 'VarianceThreshold'
+scalers: ["StandardScaler"]
 cv: 'TuneSearchCV'
 cv_params:
   refit: 'pearson_r2'
   n_trials: 1
-  verbose: False
+  verbose: 1
+  early_stopping: False
