@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 from datetime import datetime
 
 import click
@@ -24,14 +23,24 @@ def train(config_path):
 
     # Experiment Configuration: Load and validate yaml #
     with open(config_path, "r") as config_file:
-        config = yaml.safe_load(config_file)
-    config = ExperimentConfig.parse_obj(config)
+        raw_config_yaml = yaml.safe_load(config_file)
+    config = ExperimentConfig.parse_obj(raw_config_yaml)
 
     # Data Preparation #
 
     # Read in data
     data_df = pd.read_csv(config.data_params.csv_path)
     logger.info(f"Loaded {len(data_df):,} rows from {config.data_params.csv_path}")
+
+    # Remove any rows with nulls
+    orig_count = len(data_df)
+    data_df.dropna(how="any", inplace=True)
+    data_df.reset_index(drop=True, inplace=True)
+    null_rows = orig_count - len(data_df)
+    if null_rows > 0:
+        logger.warning(
+            f"Dropped {null_rows:,} rows with nulls. Final data count: {len(data_df):,}"
+        )
 
     # Prepare features and target
     target_col = config.data_params.target_col
@@ -71,7 +80,8 @@ def train(config_path):
         print(str(cv.best_estimator_), file=f)
 
     # Copy over config file so we keep track of the configuration
-    shutil.copyfile(config_path, out_dir / "config.yaml")
+    with open(out_dir / "config.yaml", "w") as f:
+        yaml.dump(raw_config_yaml, f, default_flow_style=False)
 
 
 if __name__ == "__main__":
