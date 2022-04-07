@@ -91,5 +91,13 @@ pip-sync requirements.txt
 <br/>
 <br/>
 
-# 🧠 Training the Model
-To-do: This will be updated once we've created code for training the PM2.5 regression model.
+# 🧠 Training a Regression Model
+1. Get a copy of the latest dataset in CSV format from our [Google Drive folder](https://drive.google.com/drive/u/0/folders/1IgN1fkVGJgIZXGp42uxXYT2OBeam1Etr) and place it in your local `data` folder.
+2. Create a yaml config file with the training configuration that you want inside the `config` folder (see `config/default.yaml` for a sample).
+    * Note: this is where you specify the path to the CSV datset.
+3. Make sure your terminal's current working directory is the project root. Run the training script by running `make config-path=config/default.yaml train`, where you should replace `default.yaml` with the actual yaml file you created from step 1.
+    * If you can't run Make commands on your system, you can also run the training script manually like this:
+        * `export PYTHONPATH=.` (you only need to run this once per terminal sesion)
+        * `python scripts/train.py --config-path=config/default.yaml`
+            * Note: You can also just call the script without a config path `python scripts/train.py`, in which case it will use `config/default.yaml`.
+4. Results should be saved in a dated folder under `data/outputs`. The folder should contain the best model and its params, nested CV results, and the yaml config file used.

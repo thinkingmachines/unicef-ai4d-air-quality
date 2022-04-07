@@ -16,5 +16,4 @@ requirements:
 
 
 train:
-	export PYTHONPATH=.
-	python scripts/train.py
+	export PYTHONPATH=. && python scripts/train.py --config-path=${config-path}
