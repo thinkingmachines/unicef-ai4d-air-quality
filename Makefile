@@ -9,11 +9,9 @@ dev: ## Setup dev environment
 	pip install pip-tools
 	pip-sync requirements.txt
 
-
 requirements:
 	pip-compile -v -o requirements.txt requirements.in
 	pip-sync requirements.txt
-
 
 train:
 	export PYTHONPATH=. && python scripts/train.py --config-path=${config-path}

@@ -56,7 +56,7 @@ cd unicef-ai4d-air-quality
 
 4. Install the project dependencies by running:
     * Note:
-        * This make command installs `poetry` (the python dependency manager),  `pre-commit` hooks (which enforce the automated formatters), and `jupyter`/`jupyter lab`.
+        * This make command installs `pip-tools` (the python dependency manager),  `pre-commit` hooks (which enforce the automated formatters), and `jupyter`/`jupyter lab`.
         * If you don't have `make` available in your system, you can refer to the commands under `Makefile` > `dev` recipe. That is, copy-paste those commands into your terminal.
 ```bash
 make dev
@@ -85,7 +85,11 @@ pip-compile -v -o requirements.txt requirements.in
 ```
 pip-sync requirements.txt
 ```
-`pip-sync` is also handy for updating your local conda env after you pull changes from GitHub, if another developer has added new requirements.
+
+Other notes:
+* Alternatively, we provide a shortcut for Steps 2 and 3 by running `make requirements`.
+
+* Running `pip-sync requirements.txt` alone is also handy for updating your local conda env after you pull changes from GitHub, if another developer has added new requirements.
 
 
 <br/>
@@ -100,4 +104,4 @@ pip-sync requirements.txt
         * `export PYTHONPATH=.` (you only need to run this once per terminal sesion)
         * `python scripts/train.py --config-path=config/default.yaml`
             * Note: You can also just call the script without a config path `python scripts/train.py`, in which case it will use `config/default.yaml`.
-4. Results should be saved in a dated folder under `data/outputs`. The folder should contain the best model and its params, nested CV results, and the yaml config file used.
+4. The training script should have generated results in a dated folder under `data/outputs`. The folder should contain the best model and its params, nested CV results, and the yaml config file used.
