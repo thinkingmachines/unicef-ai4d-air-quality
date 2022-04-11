@@ -12,10 +12,13 @@ argon2-cffi==21.3.0
     #   notebook
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
+async-timeout==4.0.2
+    # via redis
 attrs==21.4.0
     # via
     #   fiona
     #   jsonschema
+    #   ray
 babel==2.9.1
     # via jupyterlab-server
 backcall==0.2.0
@@ -40,10 +43,12 @@ charset-normalizer==2.0.12
     # via requests
 click==8.1.0
     # via
+    #   -r requirements.in
     #   black
     #   click-plugins
     #   cligj
     #   fiona
+    #   ray
 click-plugins==1.1.1
     # via fiona
 cligj==0.7.2
@@ -54,6 +59,8 @@ decorator==5.1.1
     # via ipython
 defusedxml==0.7.1
     # via nbconvert
+deprecated==1.2.13
+    # via redis
 earthengine-api==0.1.303
     # via -r requirements.in
 entrypoints==0.4
@@ -61,6 +68,8 @@ entrypoints==0.4
     #   jupyter-client
     #   jupyterlab-server
     #   nbconvert
+filelock==3.6.0
+    # via ray
 fiona==1.8.21
     # via geopandas
 future==0.18.2
@@ -96,6 +105,8 @@ google-resumable-media==2.3.2
     # via google-cloud-storage
 googleapis-common-protos==1.56.0
     # via google-api-core
+grpcio==1.43.0
+    # via ray
 httplib2==0.20.4
     # via
     #   earthengine-api
@@ -112,6 +123,7 @@ importlib-metadata==4.11.3
     # via
     #   click
     #   jsonschema
+    #   redis
 importlib-resources==5.6.0
     # via jsonschema
 ipykernel==6.10.0
@@ -143,12 +155,17 @@ jinja2==3.1.1
     #   jupyterlab-server
     #   nbconvert
     #   notebook
+joblib==1.1.0
+    # via
+    #   -r requirements.in
+    #   scikit-learn
 json5==0.9.6
     # via jupyterlab-server
 jsonschema==4.4.0
     # via
     #   jupyterlab-server
     #   nbformat
+    #   ray
 jupyter==1.0.0
     # via -r requirements.in
 jupyter-client==7.2.0
@@ -184,6 +201,10 @@ jupyterlab-server==2.12.0
     # via jupyterlab
 jupyterlab-widgets==1.1.0
     # via ipywidgets
+lightgbm==3.3.2
+    # via -r requirements.in
+loguru==0.6.0
+    # via -r requirements.in
 markupsafe==2.1.1
     # via
     #   jinja2
@@ -194,6 +215,8 @@ matplotlib-inline==0.1.3
     #   ipython
 mistune==0.8.4
     # via nbconvert
+msgpack==1.0.3
+    # via ray
 munch==2.5.0
     # via fiona
 mypy-extensions==0.4.3
@@ -230,7 +253,14 @@ notebook-shim==0.1.0
 numpy==1.21.5
     # via
     #   -r requirements.in
+    #   lightgbm
     #   pandas
+    #   ray
+    #   scikit-learn
+    #   scipy
+    #   tensorboardx
+    #   tune-sklearn
+    #   xgboost
 packaging==21.3
     # via
     #   bleach
@@ -238,10 +268,12 @@ packaging==21.3
     #   jupyterlab
     #   jupyterlab-server
     #   qtpy
+    #   redis
 pandas==1.3.5
     # via
     #   -r requirements.in
     #   geopandas
+    #   ray
 pandocfilters==1.5.0
     # via nbconvert
 parso==0.8.3
@@ -267,6 +299,8 @@ protobuf==3.19.4
     #   google-api-core
     #   google-cloud-storage
     #   googleapis-common-protos
+    #   ray
+    #   tensorboardx
 psutil==5.9.0
     # via ipykernel
 ptyprocess==0.7.0
@@ -281,6 +315,8 @@ pyasn1-modules==0.2.8
     # via google-auth
 pycparser==2.21
     # via cffi
+pydantic==1.9.0
+    # via -r requirements.in
 pygments==2.11.2
     # via
     #   ipython
@@ -304,6 +340,10 @@ pytz==2022.1
     # via
     #   babel
     #   pandas
+pyyaml==6.0
+    # via
+    #   -r requirements.in
+    #   ray
 pyzmq==22.3.0
     # via
     #   jupyter-client
@@ -314,13 +354,29 @@ qtconsole==5.3.0
     # via jupyter
 qtpy==2.0.1
     # via qtconsole
+ray[tune]==1.11.0
+    # via tune-sklearn
+redis==4.2.1
+    # via ray
 requests==2.27.1
     # via
     #   google-api-core
     #   google-cloud-storage
     #   jupyterlab-server
+    #   ray
 rsa==4.8
     # via google-auth
+scikit-learn==1.0.2
+    # via
+    #   -r requirements.in
+    #   lightgbm
+    #   tune-sklearn
+scipy==1.7.3
+    # via
+    #   lightgbm
+    #   scikit-learn
+    #   tune-sklearn
+    #   xgboost
 send2trash==1.8.0
     # via
     #   jupyter-server
@@ -335,19 +391,27 @@ six==1.16.0
     #   google-api-python-client
     #   google-auth
     #   google-auth-httplib2
+    #   grpcio
     #   httplib2shim
     #   munch
     #   python-dateutil
+    #   tensorboardx
 sniffio==1.2.0
     # via anyio
 soupsieve==2.3.1
     # via beautifulsoup4
+tabulate==0.8.9
+    # via ray
+tensorboardx==2.5
+    # via ray
 terminado==0.13.3
     # via
     #   jupyter-server
     #   notebook
 testpath==0.6.0
     # via nbconvert
+threadpoolctl==3.1.0
+    # via scikit-learn
 tomli==2.0.1
     # via black
 tornado==6.1
@@ -358,6 +422,8 @@ tornado==6.1
     #   jupyterlab
     #   notebook
     #   terminado
+tqdm==4.64.0
+    # via -r requirements.in
 traitlets==5.1.1
     # via
     #   ipykernel
@@ -372,15 +438,20 @@ traitlets==5.1.1
     #   nbformat
     #   notebook
     #   qtconsole
+tune-sklearn==0.4.2
+    # via -r requirements.in
 typed-ast==1.5.2
     # via black
 typing-extensions==4.1.1
     # via
     #   anyio
     #   argon2-cffi
+    #   async-timeout
     #   black
     #   importlib-metadata
     #   jsonschema
+    #   pydantic
+    #   redis
 uritemplate==3.0.1
     # via google-api-python-client
 urllib3==1.26.9
@@ -393,8 +464,14 @@ webencodings==0.5.1
     # via bleach
 websocket-client==1.3.2
     # via jupyter-server
+wheel==0.37.1
+    # via lightgbm
 widgetsnbextension==3.6.0
     # via ipywidgets
+wrapt==1.14.0
+    # via deprecated
+xgboost==1.5.2
+    # via -r requirements.in
 zipp==3.7.0
     # via
     #   importlib-metadata

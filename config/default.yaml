@@ -1,0 +1,15 @@
+data_params:
+  csv_path: 'data/2022-04-06-base-table-air4thai.csv'
+  target_col: 'aqi'
+  ignore_cols: ['date', 'station_code', 'latitude', 'longitude']
+out_dir: 'data/outputs/'
+model: 'LGBMRegressor'
+model_params:
+selector: 'VarianceThreshold'
+scalers: ["StandardScaler"]
+cv: 'TuneSearchCV'
+cv_params:
+  refit: 'pearson_r2'
+  n_trials: 1
+  verbose: 1
+  early_stopping: False

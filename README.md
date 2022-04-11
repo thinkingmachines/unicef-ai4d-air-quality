@@ -56,7 +56,7 @@ cd unicef-ai4d-air-quality
 
 4. Install the project dependencies by running:
     * Note:
-        * This make command installs `poetry` (the python dependency manager),  `pre-commit` hooks (which enforce the automated formatters), and `jupyter`/`jupyter lab`.
+        * This make command installs `pip-tools` (the python dependency manager),  `pre-commit` hooks (which enforce the automated formatters), and `jupyter`/`jupyter lab`.
         * If you don't have `make` available in your system, you can refer to the commands under `Makefile` > `dev` recipe. That is, copy-paste those commands into your terminal.
 ```bash
 make dev
@@ -85,11 +85,23 @@ pip-compile -v -o requirements.txt requirements.in
 ```
 pip-sync requirements.txt
 ```
-`pip-sync` is also handy for updating your local conda env after you pull changes from GitHub, if another developer has added new requirements.
+
+Other notes:
+* Alternatively, we provide a shortcut for Steps 2 and 3 by running `make requirements`.
+
+* Running `pip-sync requirements.txt` alone is also handy for updating your local conda env after you pull changes from GitHub, if another developer has added new requirements.
 
 
 <br/>
 <br/>
 
-# 🧠 Training the Model
-To-do: This will be updated once we've created code for training the PM2.5 regression model.
+# 🧠 Training a Regression Model
+1. Get a copy of the latest dataset in CSV format from our [Google Drive folder](https://drive.google.com/drive/u/0/folders/1IgN1fkVGJgIZXGp42uxXYT2OBeam1Etr) and place it in your local `data` folder.
+2. Create a yaml config file with the training configuration that you want inside the `config` folder (see `config/default.yaml` for a sample).
+    * Note: this is where you specify the path to the CSV datset.
+3. Make sure your terminal's current working directory is the project root. Run the training script by running `make config-path=config/default.yaml train`, where you should replace `default.yaml` with the actual yaml file you created from step 1.
+    * If you can't run Make commands on your system, you can also run the training script manually like this:
+        * `export PYTHONPATH=.` (you only need to run this once per terminal sesion)
+        * `python scripts/train.py --config-path=config/default.yaml`
+            * Note: You can also just call the script without a config path `python scripts/train.py`, in which case it will use `config/default.yaml`.
+4. The training script should have generated results in a dated folder under `data/outputs`. The folder should contain the best model and its params, nested CV results, and the yaml config file used.
