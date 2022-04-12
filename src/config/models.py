@@ -22,3 +22,4 @@ class ExperimentConfig(BaseModel):
     cv: str
     cv_params: Optional[dict]
     scalers: List[str]
+    spatial_cv_params: Optional[dict]
