@@ -6,11 +6,14 @@ import click
 import joblib
 import pandas as pd
 import yaml
+import shap
 from loguru import logger
 
 from src.config import settings
 from src.config.models import ExperimentConfig
 from src.modelling import model_utils
+
+from matplotlib import pyplot as plt
 
 
 @click.command()
@@ -65,6 +68,15 @@ def train(config_path):
     logger.info(f"\nSpatial CV results: {json.dumps(spatial_cv_results, indent=4)}")
 
     logger.info("Best estimator: {}".format(cv.best_estimator_))
+    logger.info("Model info: {}".format(cv.best_estimator_[2]))
+
+    # Generate feature importance
+    model = cv.best_estimator_[2]
+
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X)
+
+    shap_df = pd.DataFrame(shap_values).set_axis(X.columns, axis = 1)
 
     # Serialize Model and Results #
 
@@ -85,6 +97,9 @@ def train(config_path):
     joblib.dump(cv.best_estimator_, out_dir / "best_model.pkl")
     with open(out_dir / "best_model_params.txt", "w") as f:
         print(str(cv.best_estimator_), file=f)
+
+    # Save Feature Importance 
+    model_utils.get_shap(shap_df, X, out_dir / "best_model_shap.png") 
 
     # Copy over config file so we keep track of the configuration
     with open(out_dir / "config.yaml", "w") as f:
