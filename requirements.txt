@@ -39,6 +39,8 @@ certifi==2021.10.8
     #   requests
 cffi==1.15.0
     # via argon2-cffi-bindings
+cfgv==3.3.1
+    # via pre-commit
 charset-normalizer==2.0.12
     # via requests
 click==8.1.0
@@ -65,6 +67,8 @@ defusedxml==0.7.1
     # via nbconvert
 deprecated==1.2.13
     # via redis
+distlib==0.3.4
+    # via virtualenv
 earthengine-api==0.1.303
     # via -r requirements.in
 entrypoints==0.4
@@ -73,7 +77,9 @@ entrypoints==0.4
     #   jupyterlab-server
     #   nbconvert
 filelock==3.6.0
-    # via ray
+    # via
+    #   ray
+    #   virtualenv
 fiona==1.8.21
     # via geopandas
 fonttools==4.32.0
@@ -121,6 +127,8 @@ httplib2==0.20.4
     #   httplib2shim
 httplib2shim==0.0.3
     # via earthengine-api
+identify==2.4.12
+    # via pre-commit
 idna==3.3
     # via
     #   anyio
@@ -129,7 +137,9 @@ importlib-metadata==4.11.3
     # via
     #   click
     #   jsonschema
+    #   pre-commit
     #   redis
+    #   virtualenv
 importlib-resources==5.6.0
     # via jsonschema
 ipykernel==6.10.0
@@ -255,6 +265,8 @@ nest-asyncio==1.5.4
     #   jupyter-client
     #   nbclient
     #   notebook
+nodeenv==1.6.0
+    # via pre-commit
 notebook==6.4.10
     # via
     #   jupyter
@@ -307,7 +319,11 @@ pickleshare==0.7.5
 pillow==9.1.0
     # via matplotlib
 platformdirs==2.5.1
-    # via black
+    # via
+    #   black
+    #   virtualenv
+pre-commit==2.18.1
+    # via -r requirements.in
 prometheus-client==0.13.1
     # via
     #   jupyter-server
@@ -367,6 +383,7 @@ pytz==2022.1
 pyyaml==6.0
     # via
     #   -r requirements.in
+    #   pre-commit
     #   ray
 pyzmq==22.3.0
     # via
@@ -424,6 +441,7 @@ six==1.16.0
     #   munch
     #   python-dateutil
     #   tensorboardx
+    #   virtualenv
 slicer==0.0.7
     # via shap
 sniffio==1.2.0
@@ -442,6 +460,8 @@ testpath==0.6.0
     # via nbconvert
 threadpoolctl==3.1.0
     # via scikit-learn
+toml==0.10.2
+    # via pre-commit
 tomli==2.0.1
     # via black
 tornado==6.1
@@ -491,6 +511,8 @@ urllib3==1.26.9
     # via
     #   httplib2shim
     #   requests
+virtualenv==20.14.1
+    # via pre-commit
 wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
