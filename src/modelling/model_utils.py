@@ -2,7 +2,7 @@ import collections
 
 import numpy as np
 from loguru import logger
-from sklearn.model_selection import GridSearchCV, KFold, RandomizedSearchCV
+from sklearn.model_selection import GridSearchCV, KFold, RandomizedSearchCV, GroupKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
     MaxAbsScaler,
@@ -158,6 +158,7 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5):
     for index, (train_index, test_index) in enumerate(outer_cv.split(X)):
 
         logger.info(f"Running Outer Fold: {index}")
+        logger.info(f"Train length: {len(train_index)}")
 
         X_train, X_test = X.loc[train_index], X.loc[test_index]
         y_train, y_test = y[train_index], y[test_index]
@@ -178,3 +179,31 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5):
         mean_results["mean_" + metric] = np.mean(values)
 
     return dict(collections.ChainMap(*[mean_results, outer_cv_result]))
+
+def spatial_cv(c, df, X, y, seed=settings.SEED, k=5):
+    cv_result = {metric: [] for metric in eval_utils.get_scoring()}
+
+    grp = c['spatial_cv_params']['groups']
+    grp_vals = df[grp].astype(str).values
+
+    grp_kfold = GroupKFold(n_splits=k) 
+    spatial_fold = grp_kfold.split(df, y, grp_vals)      
+    train_indices, test_indices = [list(traintest) for traintest in zip(*spatial_fold)]
+    cv = [*zip(train_indices,test_indices)]
+    
+    spatial_c = c.copy()
+    spatial_c['cv_params']['cv'] = cv
+
+    cv = get_cv(spatial_c)
+    cv.fit(X, y)
+
+    y_pred = cv.best_estimator_.predict(X)
+    result = eval_utils.evaluate(y, y_pred)
+
+    # for metric, value in result.items():
+    #     cv_result[metric].append(value)
+    
+    logger.info(f"Results: {result}")
+
+    return cv_result
+    # dict(collections.ChainMap(*cv_result))
