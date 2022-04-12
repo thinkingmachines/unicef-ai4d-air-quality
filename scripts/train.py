@@ -61,6 +61,9 @@ def train(config_path):
     cv = model_utils.get_cv(config.dict())
     cv.fit(X, y)
 
+    spatial_cv_results = model_utils.spatial_cv(config.dict(), data_df, X, y)
+    logger.info(f"\nSpatial CV results: {json.dumps(spatial_cv_results, indent=4)}")
+
     logger.info("Best estimator: {}".format(cv.best_estimator_))
 
     # Serialize Model and Results #
@@ -73,6 +76,10 @@ def train(config_path):
     # Save results
     with open(out_dir / "nested_cv_results.json", "w") as f:
         json.dump(nested_cv_results, f, indent=4)
+
+    # Save results
+    with open(out_dir / "spatial_cv_results.json", "w") as f:
+        json.dump(spatial_cv_results, f, indent=4)
 
     # Save Model
     joblib.dump(cv.best_estimator_, out_dir / "best_model.pkl")
