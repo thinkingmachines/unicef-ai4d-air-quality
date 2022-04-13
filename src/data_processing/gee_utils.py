@@ -4,7 +4,7 @@ import pandas as pd
 from haversine import Direction, inverse_haversine
 
 
-def generate_station_data(
+def generate_aoi_tile_data(
     collection_id,
     start_date,
     end_date,

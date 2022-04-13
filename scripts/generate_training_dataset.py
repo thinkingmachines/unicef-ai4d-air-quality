@@ -8,7 +8,7 @@ from loguru import logger
 from tqdm.auto import tqdm
 
 from src.config import settings
-from src.data_processing import gee_utils
+from src.data_processing import aod, era5, gee_utils, ndvi
 
 
 @click.command()
@@ -35,7 +35,7 @@ from src.data_processing import gee_utils
 def main(th_stations_path, pm25_path, start_date, end_date):
     # Stations and PM2.5 values
     th_stations_df = pd.read_csv(th_stations_path)
-    pm25_df = pd.read_csv(pm25_path)
+    # pm25_df = pd.read_csv(pm25_path)
 
     # TODO: assert that th stations and pm2.5 have intersection through station_code col.
 
@@ -44,12 +44,12 @@ def main(th_stations_path, pm25_path, start_date, end_date):
         {
             "collection_id": "MODIS/006/MCD19A2_GRANULES",  # Aerosol Optical Depth (AOD)
             "bands": ["Optical_Depth_047", "Optical_Depth_055"],
-            "preprocessors": [],
+            "preprocessors": [aod.aggregate_daily_aod],
         },
         {
             "collection_id": "MODIS/006/MOD13A2",  # Vegetation
             "bands": ["NDVI", "EVI"],
-            "preprocessors": [],
+            "preprocessors": [ndvi.aggregate_daily_ndvi],
         },
         {
             "collection_id": "ECMWF/ERA5_LAND/HOURLY",  # Meteorological Variables
@@ -61,7 +61,7 @@ def main(th_stations_path, pm25_path, start_date, end_date):
                 "v_component_of_wind_10m",
                 "surface_pressure",
             ],
-            "preprocessors": [],
+            "preprocessors": [era5.aggregate_daily_era5],
         },
     ]
 
@@ -84,12 +84,9 @@ def main(th_stations_path, pm25_path, start_date, end_date):
         for index, station in tqdm(
             th_stations_df.iterrows(), total=len(th_stations_df)
         ):
-            # logger.debug(
-            #     f"Collecting {collection_id} data for station {index+1} / {len(th_stations_df)}"
-            # )
 
             # Generate station data
-            station_gee_values_df = gee_utils.generate_station_data(
+            station_gee_values_df = gee_utils.generate_aoi_tile_data(
                 collection_id,
                 start_date,
                 end_date,
@@ -100,15 +97,24 @@ def main(th_stations_path, pm25_path, start_date, end_date):
             )
             # Set the station code
             station_gee_values_df["station_code"] = station.station_code
+
+            # Pre-process
+            for preprocessor in preprocessors:
+                station_gee_values_df = preprocessor(station_gee_values_df)
+
             # Add to main df
             all_dfs.append(station_gee_values_df)
 
         # TODO: pre-process the DF
-        collection_dfs[collection_id] = pd.concat(all_dfs, axis=0)
+        collection_dfs[collection_id] = pd.concat(all_dfs, axis=0, ignore_index=True)
 
     # TODO: Temporary log to check results
     for collection, df in collection_dfs.items():
         logger.debug(f"{collection}: {len(df)} rows")
+        debug_dir = settings.DATA_DIR / "debug"
+        os.makedirs(debug_dir, exist_ok=True)
+        collection_name_sanitized = collection.replace("/", "_")
+        df.to_csv(debug_dir / f"{collection_name_sanitized}.csv", index=False)
 
 
 if __name__ == "__main__":
