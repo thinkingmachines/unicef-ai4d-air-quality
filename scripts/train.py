@@ -5,6 +5,7 @@ from datetime import datetime
 import click
 import joblib
 import pandas as pd
+import shap
 import yaml
 from loguru import logger
 
@@ -61,7 +62,19 @@ def train(config_path):
     cv = model_utils.get_cv(config.dict())
     cv.fit(X, y)
 
-    logger.info("Best estimator: {}".format(cv.best_estimator_))
+    spatial_cv_results = model_utils.spatial_cv(config.dict(), data_df, X, y)
+    logger.info(f"\nSpatial CV results: {json.dumps(spatial_cv_results, indent=4)}")
+
+    logger.info(f"Best estimator: {cv.best_estimator_}")
+
+    # Generate feature importance
+    # extracting best model from CV
+    model = cv.best_estimator_[2]
+
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X)
+
+    shap_df = pd.DataFrame(shap_values).set_axis(X.columns, axis=1)
 
     # Serialize Model and Results #
 
@@ -74,10 +87,17 @@ def train(config_path):
     with open(out_dir / "nested_cv_results.json", "w") as f:
         json.dump(nested_cv_results, f, indent=4)
 
+    # Save results
+    with open(out_dir / "spatial_cv_results.json", "w") as f:
+        json.dump(spatial_cv_results, f, indent=4)
+
     # Save Model
     joblib.dump(cv.best_estimator_, out_dir / "best_model.pkl")
     with open(out_dir / "best_model_params.txt", "w") as f:
         print(str(cv.best_estimator_), file=f)
+
+    # Save Feature Importance
+    model_utils.get_shap(shap_df, X, out_dir / "best_model_shap.png")
 
     # Copy over config file so we keep track of the configuration
     with open(out_dir / "config.yaml", "w") as f:

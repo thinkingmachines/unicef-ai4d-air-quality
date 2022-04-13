@@ -13,3 +13,6 @@ cv_params:
   n_trials: 1
   verbose: 1
   early_stopping: False
+  cv:
+spatial_cv_params:
+  groups: 'station_code'

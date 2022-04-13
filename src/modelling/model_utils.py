@@ -1,8 +1,10 @@
 import collections
 
 import numpy as np
+import pandas as pd
 from loguru import logger
-from sklearn.model_selection import GridSearchCV, KFold, RandomizedSearchCV
+from matplotlib import pyplot as plt
+from sklearn.model_selection import GridSearchCV, GroupKFold, KFold, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
     MaxAbsScaler,
@@ -158,6 +160,7 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5):
     for index, (train_index, test_index) in enumerate(outer_cv.split(X)):
 
         logger.info(f"Running Outer Fold: {index}")
+        logger.info(f"Train length: {len(train_index)}")
 
         X_train, X_test = X.loc[train_index], X.loc[test_index]
         y_train, y_test = y[train_index], y[test_index]
@@ -178,3 +181,86 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5):
         mean_results["mean_" + metric] = np.mean(values)
 
     return dict(collections.ChainMap(*[mean_results, outer_cv_result]))
+
+
+def spatial_cv(c, df, X, y, seed=settings.SEED, k=5):
+    cv_result = {metric: [] for metric in eval_utils.get_scoring()}
+
+    grp = c["spatial_cv_params"]["groups"]
+    grp_vals = df[grp].astype(str).values
+
+    grp_kfold = GroupKFold(n_splits=k)
+    spatial_fold = grp_kfold.split(df, y, grp_vals)
+    train_indices, test_indices = [list(traintest) for traintest in zip(*spatial_fold)]
+    cv = [*zip(train_indices, test_indices)]
+
+    spatial_c = c.copy()
+    spatial_c["cv_params"]["cv"] = cv
+
+    cv = get_cv(spatial_c)
+    cv.fit(X, y)
+
+    y_pred = cv.best_estimator_.predict(X)
+    result = eval_utils.evaluate(y, y_pred)
+
+    for metric, value in result.items():
+        cv_result[metric].append(value)
+
+    logger.info(f"Results: {result}")
+
+    return cv_result
+
+
+def get_shap(
+    df_shap,
+    df,
+    dir,
+    top_n=20,
+    figsize=(15, 13),
+    color=["#4682B4", "#CD5C5C"],
+    barwidth=0.8,
+):
+    try:
+        shap_v = pd.DataFrame(df_shap)
+    except ValueError:
+        shap_v = pd.DataFrame(df_shap[1])
+
+    feature_list = df.columns
+    shap_v.columns = feature_list
+    df_v = df.copy().reset_index().drop("index", axis=1)
+
+    # Determine the correlation in order to plot with different colors (pearson)
+    corr_list = []
+    for i in feature_list:
+        b = np.corrcoef(shap_v[i], df_v[i])[1][0]
+        corr_list.append(b)
+
+    corr_df = pd.concat([pd.Series(feature_list), pd.Series(corr_list)], axis=1).fillna(
+        0
+    )
+
+    # Make a data frame. Column 1 is the feature, and Column 2 is the correlation coefficient
+    corr_df.columns = ["feature", "corr"]
+    corr_df["sign"] = np.where(corr_df["corr"] > 0, color[0], color[1])
+
+    # Plot
+    shap_abs = np.abs(shap_v)
+    k = pd.DataFrame(shap_abs.mean()).reset_index()
+    k.columns = ["feature", "SHAP_abs"]
+
+    k2 = k.merge(corr_df, on="feature", how="inner")
+    k2 = k2.nlargest(top_n, "SHAP_abs")
+    k2 = k2.sort_values(by="SHAP_abs", ascending=True)
+    colorlist = k2["sign"]
+
+    ax = k2.plot.barh(
+        x="feature",
+        y="SHAP_abs",
+        width=barwidth,
+        color=colorlist,
+        figsize=figsize,
+        legend=False,
+    )
+    ax.set_xlabel("SHAP Value (Red = Negative Impact)")
+
+    plt.savefig(dir, bbox_inches="tight")
