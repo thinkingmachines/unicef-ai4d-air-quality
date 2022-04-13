@@ -2,7 +2,6 @@ data_params:
   csv_path: 'data/2022-04-06-base-table-air4thai.csv'
   target_col: 'aqi'
   ignore_cols: ['date', 'station_code', 'latitude', 'longitude']
-  # ignore_cols: ['date', 'latitude', 'longitude']
 out_dir: 'data/outputs/'
 model: 'LGBMRegressor'
 model_params:
@@ -15,5 +14,5 @@ cv_params:
   verbose: 1
   early_stopping: False
   cv:
-spatial_cv_params: 
-  groups: 'station_code' 
+spatial_cv_params:
+  groups: 'station_code'
