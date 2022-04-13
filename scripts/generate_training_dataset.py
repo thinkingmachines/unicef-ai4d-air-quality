@@ -35,7 +35,7 @@ from src.data_processing import aod, era5, gee_utils, ndvi
 def main(th_stations_path, pm25_path, start_date, end_date):
     # Stations and PM2.5 values
     th_stations_df = pd.read_csv(th_stations_path)
-    # pm25_df = pd.read_csv(pm25_path)
+    pm25_df = pd.read_csv(pm25_path)
 
     # TODO: assert that th stations and pm2.5 have intersection through station_code col.
 
@@ -65,7 +65,7 @@ def main(th_stations_path, pm25_path, start_date, end_date):
         },
     ]
 
-    collection_dfs = {}
+    gee_dfs = {}
 
     for gee_index, gee_dataset in enumerate(gee_datasets):
 
@@ -106,15 +106,32 @@ def main(th_stations_path, pm25_path, start_date, end_date):
             all_dfs.append(station_gee_values_df)
 
         # TODO: pre-process the DF
-        collection_dfs[collection_id] = pd.concat(all_dfs, axis=0, ignore_index=True)
+        gee_dfs[collection_id] = pd.concat(all_dfs, axis=0, ignore_index=True)
 
     # TODO: Temporary log to check results
-    for collection, df in collection_dfs.items():
+    for collection, df in gee_dfs.items():
         logger.debug(f"{collection}: {len(df)} rows")
         debug_dir = settings.DATA_DIR / "debug"
         os.makedirs(debug_dir, exist_ok=True)
         collection_name_sanitized = collection.replace("/", "_")
         df.to_csv(debug_dir / f"{collection_name_sanitized}.csv", index=False)
+
+    # Create reference table
+    # Start with the daily pm2.5 DF
+    base_table = pm25_df.copy()
+
+    # Merge all tables
+    # Station info
+    base_table = base_table.merge(th_stations_df, on=["station_code"], how="left")
+
+    # TODO: Population
+    for collection, df in gee_dfs.items():
+        base_table = base_table.merge(df, on=["date", "station_code"], how="left")
+
+    # Sorting
+    base_table = base_table.sort_values(by=["station_code", "date"])
+    base_table.to_csv(settings.DATA_DIR / "training_dataset.csv", index=False)
+    logger.info(f"Generated base table for ML modelling with {len(base_table)} rows")
 
 
 if __name__ == "__main__":
