@@ -11,7 +11,7 @@ from loguru import logger
 
 from src.config import settings
 from src.config.models import ExperimentConfig
-from src.modelling import model_utils
+from src.modelling import eval_utils, model_utils
 
 
 @click.command()
@@ -59,12 +59,11 @@ def train(config_path):
     nested_cv_results = model_utils.nested_cv(config.dict(), X, y)
     logger.info(f"\nNested CV results: {json.dumps(nested_cv_results, indent=4)}")
 
-    cv = model_utils.get_cv(config.dict())
-    cv.fit(X, y)
-
     spatial_cv_results = model_utils.spatial_cv(config.dict(), data_df, X, y)
     logger.info(f"\nSpatial CV results: {json.dumps(spatial_cv_results, indent=4)}")
 
+    cv = model_utils.get_cv(config.dict())
+    cv.fit(X, y)
     logger.info(f"Best estimator: {cv.best_estimator_}")
 
     # Generate feature importance
@@ -98,6 +97,10 @@ def train(config_path):
 
     # Save Feature Importance
     model_utils.get_shap(shap_df, X, out_dir / "best_model_shap.png")
+
+    # Generate actual vs predicted scatter plot
+    y_pred = cv.best_estimator_.predict(X)
+    eval_utils.plot_actual_vs_predicted(y, y_pred, filepath=out_dir / "scatterplot.png")
 
     # Copy over config file so we keep track of the configuration
     with open(out_dir / "config.yaml", "w") as f:

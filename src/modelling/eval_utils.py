@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 from sklearn.metrics import (
@@ -61,3 +62,16 @@ def get_scoring():
         "mae": make_scorer(mean_absolute_error),
         "mape": make_scorer(mean_absolute_percentage_error),
     }
+
+
+def plot_actual_vs_predicted(y_true, y_pred, filepath):
+    plt.clf()
+    plt.scatter(y_true, y_pred)
+    plt.xlabel("Actual")
+    plt.ylabel("Predicted")
+    # ax_max = max(y + y_pred)
+    ax_max = 150
+    ax = plt.gca()
+    ax.set_xlim([0, ax_max])
+    ax.set_ylim([0, ax_max])
+    plt.savefig(filepath)
