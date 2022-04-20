@@ -2,6 +2,7 @@ import os
 
 import click
 import ee
+import google.auth
 import pandas as pd
 from dotenv import load_dotenv
 from loguru import logger
@@ -138,9 +139,12 @@ if __name__ == "__main__":
 
     # Authenticate with GEE
     load_dotenv()
-    service_account = os.environ["SERVICE_ACCOUNT"]
-    service_account_key = os.environ["SERVICE_ACCOUNT_KEY"]
-    credentials = ee.ServiceAccountCredentials(service_account, service_account_key)
+    credentials, project = google.auth.default(
+        scopes=[
+            "https://www.googleapis.com/auth/earthengine",
+            "https://www.googleapis.com/auth/devstorage.full_control",
+        ]
+    )
     ee.Initialize(credentials)
 
     main()
