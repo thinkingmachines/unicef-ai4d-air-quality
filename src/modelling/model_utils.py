@@ -1,4 +1,5 @@
 import collections
+import os
 
 import numpy as np
 import pandas as pd
@@ -152,10 +153,13 @@ def get_cv(c, seed=settings.SEED):
         return GridSearchCV(pipe, params, scoring=scoring, **cv_params)
 
 
-def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5):
+def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5, out_dir=None):
 
     outer_cv = KFold(n_splits=k, shuffle=True, random_state=seed)
     outer_cv_result = {metric: [] for metric in eval_utils.get_scoring()}
+
+    all_y_test = []
+    all_y_pred = []
 
     for index, (train_index, test_index) in enumerate(outer_cv.split(X)):
 
@@ -171,6 +175,10 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5):
         y_pred = inner_cv.best_estimator_.predict(X_test)
         result = eval_utils.evaluate(y_test, y_pred)
 
+        # Accumulate all the y_test and y_pred pairs for producing combined scatterplot.
+        all_y_test.extend(y_test)
+        all_y_pred.extend(y_pred)
+
         for metric, value in result.items():
             outer_cv_result[metric].append(value)
 
@@ -179,6 +187,11 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5):
     mean_results = {}
     for metric, values in outer_cv_result.items():
         mean_results["mean_" + metric] = np.mean(values)
+
+    if out_dir:
+        fig = eval_utils.plot_actual_vs_predicted(all_y_test, all_y_pred)
+        fig.savefig(os.path.join(out_dir, "scatterplot_nestedcv_combined.png"))
+        plt.clf()
 
     return dict(collections.ChainMap(*[mean_results, outer_cv_result]))
 
@@ -211,7 +224,7 @@ def spatial_cv(c, df, X, y, seed=settings.SEED, k=5):
     return cv_result
 
 
-def get_shap(
+def generate_simplified_shap(
     df_shap,
     df,
     dir,
@@ -264,3 +277,4 @@ def get_shap(
     ax.set_xlabel("SHAP Value (Red = Negative Impact)")
 
     plt.savefig(dir, bbox_inches="tight")
+    plt.clf()
