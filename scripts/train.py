@@ -8,10 +8,11 @@ import pandas as pd
 import shap
 import yaml
 from loguru import logger
+from matplotlib import pyplot as plt
 
 from src.config import settings
 from src.config.models import ExperimentConfig
-from src.modelling import eval_utils, model_utils
+from src.modelling import model_utils
 
 
 @click.command()
@@ -55,8 +56,13 @@ def train(config_path):
     X = data_df[feature_cols]
     y = data_df[target_col].values
 
+    # Prepare output dir
+    out_dir = config.out_dir / datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir, exist_ok=True)
+
     # Model Training
-    nested_cv_results = model_utils.nested_cv(config.dict(), X, y)
+    nested_cv_results = model_utils.nested_cv(config.dict(), X, y, out_dir=out_dir)
     logger.info(f"\nNested CV results: {json.dumps(nested_cv_results, indent=4)}")
 
     spatial_cv_results = model_utils.spatial_cv(config.dict(), data_df, X, y)
@@ -77,11 +83,6 @@ def train(config_path):
 
     # Serialize Model and Results #
 
-    # Prepare output dir
-    out_dir = config.out_dir / datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir, exist_ok=True)
-
     # Save results
     with open(out_dir / "nested_cv_results.json", "w") as f:
         json.dump(nested_cv_results, f, indent=4)
@@ -95,12 +96,12 @@ def train(config_path):
     with open(out_dir / "best_model_params.txt", "w") as f:
         print(str(cv.best_estimator_), file=f)
 
-    # Save Feature Importance
-    model_utils.get_shap(shap_df, X, out_dir / "best_model_shap.png")
+    # Save Feature Importance -  (simplified shap)
+    model_utils.generate_simplified_shap(shap_df, X, out_dir / "best_model_shap.png")
 
-    # Generate actual vs predicted scatter plot
-    y_pred = cv.best_estimator_.predict(X)
-    eval_utils.plot_actual_vs_predicted(y, y_pred, filepath=out_dir / "scatterplot.png")
+    # Save Feature Importance -  (raw SHAP summary plot)
+    shap.summary_plot(shap_values, features=X, show=False, plot_size=(30, 5))
+    plt.savefig(out_dir / "shap_summary.png")
 
     # Copy over config file so we keep track of the configuration
     with open(out_dir / "config.yaml", "w") as f:

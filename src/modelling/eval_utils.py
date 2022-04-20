@@ -64,14 +64,14 @@ def get_scoring():
     }
 
 
-def plot_actual_vs_predicted(y_true, y_pred, filepath):
+def plot_actual_vs_predicted(y_true, y_pred):
     plt.clf()
     plt.scatter(y_true, y_pred)
     plt.xlabel("Actual")
     plt.ylabel("Predicted")
-    # ax_max = max(y + y_pred)
-    ax_max = 150
+    ax_max = max(y_true + y_pred) + 50
     ax = plt.gca()
     ax.set_xlim([0, ax_max])
     ax.set_ylim([0, ax_max])
-    plt.savefig(filepath)
+    plt.axline((0, 0), slope=1, color="black")
+    return plt.gcf()
