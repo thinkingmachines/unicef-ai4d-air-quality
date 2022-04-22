@@ -1,18 +1,34 @@
 data_params:
-  csv_path: 'data/2022-04-06-base-table-air4thai.csv'
-  target_col: 'aqi'
-  ignore_cols: ['date', 'station_code', 'latitude', 'longitude']
-out_dir: 'data/outputs/'
-model: 'LGBMRegressor'
+  csv_path: data/2022-04-21-base-table-air4thai.csv
+  target_col: pm2.5
+  # Specify either include_cols or ignore_cols (leave one empty). If both are specified, include_cols will be prioritized.
+  include_cols:
+    # AOD
+    - AOD_047_mean
+    - AOD_055_mean
+    # Other env. factors: vegetation
+    - evi_mean
+    # Human-related
+    - total_population
+    # Meteorological variables
+    - dewpoint_temperature_2m_mean
+    - temperature_2m_mean
+    - u_component_of_wind_10m_mean
+    - v_component_of_wind_10m_mean
+    - surface_pressure_mean
+    - total_precipitation_daily
+model: XGBRegressor
 model_params:
-selector: 'VarianceThreshold'
-scalers: ["StandardScaler"]
-cv: 'TuneSearchCV'
+out_dir: data/outputs/
+selector: VarianceThreshold
+scalers:
+  - StandardScaler
+cv: TuneSearchCV
 cv_params:
-  refit: 'pearson_r2'
+  refit: sklearn_r2
   n_trials: 1
   verbose: 1
-  early_stopping: False
+  early_stopping: false
   cv:
 spatial_cv_params:
-  groups: 'station_code'
+  groups: station_code
