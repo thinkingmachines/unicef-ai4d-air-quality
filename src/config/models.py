@@ -9,7 +9,21 @@ from src.config import settings
 class DataParams(BaseModel):
     csv_path: str
     target_col: str
+    include_cols: List[str] = []
     ignore_cols: List[str] = []
+
+    def infer_selected_features(self, full_feature_list):
+        if self.include_cols:
+            feature_cols = [
+                feature for feature in full_feature_list if feature in self.include_cols
+            ]
+        else:
+            feature_cols = [
+                feature
+                for feature in full_feature_list
+                if feature not in self.data_params.ignore_cols + [self.target_col]
+            ]
+        return feature_cols
 
 
 class ExperimentConfig(BaseModel):

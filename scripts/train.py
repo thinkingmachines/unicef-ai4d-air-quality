@@ -47,11 +47,7 @@ def train(config_path):
 
     # Prepare features and target
     target_col = config.data_params.target_col
-    feature_cols = [
-        feature
-        for feature in data_df.columns
-        if feature not in config.data_params.ignore_cols + [target_col]
-    ]
+    feature_cols = config.data_params.infer_selected_features(data_df.columns)
     logger.info(f"Target: {target_col}, {len(feature_cols)} Features: {feature_cols}, ")
 
     X = data_df[feature_cols]
