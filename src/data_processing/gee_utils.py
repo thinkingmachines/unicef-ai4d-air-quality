@@ -1,7 +1,28 @@
+import os
+
 import ee
+import google.auth
 import numpy as np
 import pandas as pd
+from dotenv import load_dotenv
 from haversine import Direction, inverse_haversine
+
+
+def gee_auth(service_acct=False):
+    if service_acct:
+        load_dotenv()
+        service_account = os.environ["SERVICE_ACCOUNT"]
+        service_account_key = os.environ["SERVICE_ACCOUNT_KEY"]
+        credentials = ee.ServiceAccountCredentials(service_account, service_account_key)
+        ee.Initialize(credentials)
+    else:
+        credentials, project = google.auth.default(
+            scopes=[
+                "https://www.googleapis.com/auth/earthengine",
+                "https://www.googleapis.com/auth/devstorage.full_control",
+            ]
+        )
+        ee.Initialize(credentials)
 
 
 def generate_aoi_tile_data(

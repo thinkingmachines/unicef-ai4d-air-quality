@@ -28,4 +28,14 @@ def aggregate_daily_ndvi(ndvi_df):
     ).sort_values(["station_code", "date"])
     ndvi_filled = ndvi_filled.fillna(method="ffill")
 
+    # Select only relevant columns
+    ndvi_filled = ndvi_filled[
+        [
+            "station_code",
+            "date",
+            "NDVI",
+            "EVI",
+        ]
+    ]
+
     return ndvi_filled
