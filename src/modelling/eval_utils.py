@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from scipy import stats
 from sklearn.metrics import (
     make_scorer,
@@ -75,3 +76,62 @@ def plot_actual_vs_predicted(y_true, y_pred):
     ax.set_ylim([0, ax_max])
     plt.axline((0, 0), slope=1, color="black")
     return plt.gcf()
+
+
+def generate_simplified_shap(
+    df_shap,
+    df,
+    dir,
+    top_n=20,
+    figsize=(15, 13),
+    color=["#4682B4", "#CD5C5C"],
+    barwidth=0.8,
+):
+    try:
+        shap_v = pd.DataFrame(df_shap)
+    except ValueError:
+        shap_v = pd.DataFrame(df_shap[1])
+
+    feature_list = df.columns
+    shap_v.columns = feature_list
+    df_v = df.copy().reset_index().drop("index", axis=1)
+
+    # Determine the correlation in order to plot with different colors (pearson)
+    corr_list = []
+    for i in feature_list:
+        b = np.corrcoef(shap_v[i], df_v[i])[1][0]
+        corr_list.append(b)
+
+    corr_df = pd.concat([pd.Series(feature_list), pd.Series(corr_list)], axis=1).fillna(
+        0
+    )
+
+    # Make a data frame. Column 1 is the feature, and Column 2 is the correlation coefficient
+    corr_df.columns = ["feature", "corr"]
+    corr_df["sign"] = np.where(corr_df["corr"] > 0, color[0], color[1])
+
+    # Plot
+    shap_abs = np.abs(shap_v)
+    k = pd.DataFrame(shap_abs.mean()).reset_index()
+    k.columns = ["feature", "SHAP_abs"]
+
+    k2 = k.merge(corr_df, on="feature", how="inner")
+    k2 = k2.nlargest(top_n, "SHAP_abs")
+    k2 = k2.sort_values(by="SHAP_abs", ascending=True)
+    colorlist = k2["sign"]
+
+    ax = k2.plot.barh(
+        x="feature",
+        y="SHAP_abs",
+        width=barwidth,
+        color=colorlist,
+        figsize=figsize,
+        legend=False,
+    )
+    ax.set_xlabel(
+        "Average Impact on Model Output (Blue = Positive Feature Correlation)"
+    )
+    plt.rcParams.update({"font.size": 20})
+
+    plt.savefig(dir, bbox_inches="tight")
+    plt.clf()
