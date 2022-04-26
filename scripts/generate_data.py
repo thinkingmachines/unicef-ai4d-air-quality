@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 import click
 import pandas as pd
@@ -26,7 +27,6 @@ def generate_locations_with_dates_df(
         )
         .droplevel(id_col)
     )
-    # df[date_col]= df [date_col].apply(lambda x: x.strftime(DATE_FORMAT))
     df[date_col] = df[date_col].dt.date
     return df
 
@@ -73,7 +73,15 @@ def collect_gee_datasets(gee_datasets, start_date, end_date, locations_df, id_co
     return gee_dfs
 
 
-def join_datasets(locations_df, start_date, end_date, gee_dfs, id_col, date_col="date"):
+def join_datasets(
+    locations_df,
+    start_date,
+    end_date,
+    gee_dfs,
+    id_col,
+    date_col="date",
+    ground_truth_df=None,
+):
     # TODO: Population
 
     # Create DF with locations + start_date, end_date
@@ -85,10 +93,20 @@ def join_datasets(locations_df, start_date, end_date, gee_dfs, id_col, date_col=
     for _, gee_df in gee_dfs.items():
         base_df = base_df.merge(gee_df, on=[id_col, date_col], how="left")
 
+    # Ground Truth
+    if ground_truth_df is not None:
+        base_df = base_df.merge(ground_truth_df, on=[id_col, date_col], how="left")
+
     # Sorting
     base_df = base_df.sort_values(by=[id_col, date_col])
 
     return base_df
+
+
+def load_ground_truth(csv_path):
+    df = pd.read_csv(csv_path)
+    df["date"] = pd.to_datetime(df["date"]).dt.date
+    return df
 
 
 @click.command()
@@ -98,25 +116,46 @@ def join_datasets(locations_df, start_date, end_date, gee_dfs, id_col, date_col=
     help="Path to the CSV file containing the locations for which to generate data.",
 )
 @click.option(
+    "--ground-truth-csv",
+    help="Path to the CSV file containing the locations for which to generate data.",
+)
+@click.option(
+    "--id-col",
+    default="station_code",
+    help="Primary Key to uniquely identify entries in the locations CSV. If ground truth CSV is provided, this should be present in that file as well.",
+)
+@click.option(
     "--start-date",
     default="2021-01-01",
     help="Date to start collecting data",
 )
 @click.option(
     "--end-date",
-    default="2022-01-01",
+    default="2021-12-31",
     help="Date to end collecting data",
 )
-def main(locations_csv, start_date, end_date):
-    ID_COL = "station_code"
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="If true, will run only on 2 locations just to check if the whole script will run.",
+)
+def main(locations_csv, ground_truth_csv, id_col, start_date, end_date, debug):
 
     # Read in desired AOI locations
     # Assumed that the CSV has an id column, latitude, and longitude at the minimum.
     locations_df = pd.read_csv(locations_csv)
-    print(locations_df.columns.tolist())
-    assert {ID_COL, "latitude", "longitude"} <= set(
-        locations_df.columns.tolist()
-    )  # Required columns
+    if debug:
+        locations_df = locations_df[:2]
+    assert {id_col, "latitude", "longitude"} <= set(locations_df.columns.tolist())
+
+    # Read in ground truth if any
+    if ground_truth_csv:
+        ground_truth_df = load_ground_truth(ground_truth_csv)
+        logger.info(f"Generating dataset with ground truth from {ground_truth_csv}")
+    else:
+        ground_truth_df = None
+        logger.warning("Generating dataset without ground truth.")
 
     # Collect GEE Datasets
     gee_datasets = [
@@ -146,20 +185,36 @@ def main(locations_csv, start_date, end_date):
 
     gee_utils.gee_auth(service_acct=True)
     gee_dfs = collect_gee_datasets(
-        gee_datasets, start_date, end_date, locations_df, id_col=ID_COL
+        gee_datasets, start_date, end_date, locations_df, id_col=id_col
     )
 
-    # TODO: Temporary log to check results
+    # Save outputs
+    run_timestamp = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
+
+    # Debug logs to check intermediate files
     for collection, df in gee_dfs.items():
         logger.debug(f"{collection}: {len(df)} rows")
         debug_dir = settings.DATA_DIR / "debug"
         os.makedirs(debug_dir, exist_ok=True)
         collection_name_sanitized = collection.replace("/", "_")
-        df.to_csv(debug_dir / f"{collection_name_sanitized}.csv", index=False)
+        df.to_csv(
+            debug_dir / f"{collection_name_sanitized}_{run_timestamp}.csv", index=False
+        )
 
-    base_df = join_datasets(locations_df, start_date, end_date, gee_dfs, ID_COL)
-    base_df.to_csv(settings.DATA_DIR / "generated_dataset.csv", index=False)
-    logger.info(f"Generated base table for ML modelling with {len(base_df)} rows")
+    # Generate final DF and save to CSV
+    base_df = join_datasets(
+        locations_df,
+        start_date,
+        end_date,
+        gee_dfs,
+        id_col,
+        ground_truth_df=ground_truth_df,
+    )
+    out_filepath = f"generated_data_{run_timestamp}.csv"
+    base_df.to_csv(settings.DATA_DIR / out_filepath, index=False)
+    logger.info(
+        f"Generated base table for ML modelling with {len(base_df)} rows. Saved to {out_filepath}"
+    )
 
 
 if __name__ == "__main__":
