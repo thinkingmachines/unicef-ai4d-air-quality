@@ -112,7 +112,7 @@ def load_ground_truth(csv_path):
 @click.command()
 @click.option(
     "--locations-csv",
-    default=settings.DATA_DIR / "air4thai_th_stations_test.csv",
+    default=settings.DATA_DIR / "air4thai_th_stations.csv",
     help="Path to the CSV file containing the locations for which to generate data.",
 )
 @click.option(
@@ -146,6 +146,7 @@ def main(locations_csv, ground_truth_csv, id_col, start_date, end_date, debug):
     # Assumed that the CSV has an id column, latitude, and longitude at the minimum.
     locations_df = pd.read_csv(locations_csv)
     if debug:
+        logger.warning("Running in debug mode. Trying out with 2 locations only.")
         locations_df = locations_df[:2]
     assert {id_col, "latitude", "longitude"} <= set(locations_df.columns.tolist())
 
