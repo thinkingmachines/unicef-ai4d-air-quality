@@ -2,12 +2,15 @@ import os
 from datetime import datetime
 
 import click
+import geopandas as gpd
 import pandas as pd
 from loguru import logger
+from rasterstats import zonal_stats
+from shapely import wkt
 from tqdm.auto import tqdm
 
 from src.config import settings
-from src.data_processing import aod, era5, gee_utils, ndvi
+from src.data_processing import aod, era5, gee_utils, geom_utils, ndvi
 
 
 def generate_locations_with_dates_df(
@@ -78,6 +81,7 @@ def join_datasets(
     start_date,
     end_date,
     gee_dfs,
+    hrsl_df,
     id_col,
     date_col="date",
     ground_truth_df=None,
@@ -88,6 +92,10 @@ def join_datasets(
     base_df = generate_locations_with_dates_df(
         locations_df, start_date, end_date, id_col=id_col, date_col=date_col
     )
+
+    # Merge HRSL
+    # HRSL is a slow-moving feature, and so does not change depending on the date.
+    base_df = base_df.merge(hrsl_df, on=[id_col], how="left")
 
     # Merge GEE dfs
     for _, gee_df in gee_dfs.items():
@@ -109,6 +117,38 @@ def load_ground_truth(csv_path):
     return df
 
 
+def generate_bboxes(
+    locations_df,
+    bbox_size_km,
+    geometry_col="geometry",
+):
+    locations_df = locations_df.copy()
+    locations_df[geometry_col] = locations_df.apply(
+        lambda row: geom_utils.generate_bbox_wkt(
+            row["latitude"], row["longitude"], distance_km=bbox_size_km
+        ),
+        axis=1,
+    )
+    return locations_df
+
+
+def collect_hrsl(locations_df, hrsl_tif, id_col, bbox_size_km):
+    locations_df = generate_bboxes(locations_df, bbox_size_km=bbox_size_km)
+    # locations_df.to_csv(settings.DATA_DIR / "debug_locations.csv")
+    hrsl_gdf = gpd.GeoDataFrame(
+        locations_df, geometry=locations_df["geometry"].apply(wkt.loads)
+    )
+    hrsl_gdf["total_population"] = pd.DataFrame(
+        zonal_stats(vectors=hrsl_gdf["geometry"], raster=hrsl_tif, stats="sum")
+    )["sum"]
+
+    # Retain only id_col and total_population to save on space.
+    hrsl_df = pd.DataFrame(hrsl_gdf.drop(columns="geometry"))[
+        [id_col, "total_population"]
+    ]
+    return hrsl_df
+
+
 @click.command()
 @click.option(
     "--locations-csv",
@@ -123,6 +163,11 @@ def load_ground_truth(csv_path):
     "--id-col",
     default="station_code",
     help="Primary Key to uniquely identify entries in the locations CSV. If ground truth CSV is provided, this should be present in that file as well.",
+)
+@click.option(
+    "--hrsl-tif",
+    default=settings.DATA_DIR / "tha_general_2020.tif",
+    help="Path to the HRSL tif file containing the population counts for the country.",
 )
 @click.option(
     "--start-date",
@@ -140,7 +185,10 @@ def load_ground_truth(csv_path):
     default=False,
     help="If true, will run only on 2 locations just to check if the whole script will run.",
 )
-def main(locations_csv, ground_truth_csv, id_col, start_date, end_date, debug):
+def main(
+    locations_csv, ground_truth_csv, hrsl_tif, id_col, start_date, end_date, debug
+):
+    BBOX_SIZE_KM = 1
 
     # Read in desired AOI locations
     # Assumed that the CSV has an id column, latitude, and longitude at the minimum.
@@ -157,6 +205,12 @@ def main(locations_csv, ground_truth_csv, id_col, start_date, end_date, debug):
     else:
         ground_truth_df = None
         logger.warning("Generating dataset without ground truth.")
+
+    # Compute HRSL stats
+    logger.info("Computing population sums...")
+    hrsl_df = collect_hrsl(
+        locations_df, hrsl_tif, id_col=id_col, bbox_size_km=BBOX_SIZE_KM
+    )
 
     # Collect GEE Datasets
     gee_datasets = [
@@ -203,11 +257,13 @@ def main(locations_csv, ground_truth_csv, id_col, start_date, end_date, debug):
         )
 
     # Generate final DF and save to CSV
+    logger.info("Joining all datasets together...")
     base_df = join_datasets(
         locations_df,
         start_date,
         end_date,
         gee_dfs,
+        hrsl_df,
         id_col,
         ground_truth_df=ground_truth_df,
     )
