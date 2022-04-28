@@ -171,7 +171,7 @@ def collect_hrsl(locations_df, hrsl_tif, id_col, bbox_size_km):
 )
 @click.option(
     "--start-date",
-    default="2021-01-01",
+    default="2021-12-01",
     help="Date to start collecting data",
 )
 @click.option(
@@ -214,6 +214,21 @@ def main(
 
     # Collect GEE Datasets
     gee_datasets = [
+        {
+            "collection_id": "COPERNICUS/S5P/OFFL/L3_AER_AI",
+            "bands": [
+                "absorbing_aerosol_index",
+            ],
+            "preprocessors": [aod.aggregate_daily_s5p_aerosol],
+        },
+        {
+            "collection_id": "ECMWF/CAMS/NRT",
+            "bands": [
+                # "total_aerosol_optical_depth_at_469nm_surface", # Results in errors cause it can be missing sometimes
+                "total_aerosol_optical_depth_at_550nm_surface",
+            ],
+            "preprocessors": [aod.rescale_cams_aod, aod.aggregate_daily_cams_aod],
+        },
         {
             "collection_id": "MODIS/006/MCD19A2_GRANULES",  # Aerosol Optical Depth (AOD)
             "bands": ["Optical_Depth_047", "Optical_Depth_055"],
