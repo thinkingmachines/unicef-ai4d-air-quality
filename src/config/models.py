@@ -23,7 +23,7 @@ class DataParams(BaseModel):
             feature_cols = [
                 feature
                 for feature in full_feature_list
-                if feature not in self.data_params.ignore_cols + [self.target_col]
+                if feature not in self.ignore_cols + [self.target_col]
             ]
         return feature_cols
 
