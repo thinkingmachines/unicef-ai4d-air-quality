@@ -42,7 +42,7 @@ def generate_aoi_tile_data(
     Parameters:
     - collection_id: ID of GEE collection
     - start_date: Start of desired date range
-    - end_date: End of desired date range
+    - end_date: End of desired date range (inclusive).
     - latitude: Station latitude
     - longitude: Station longitude
     - bands: List of bands to get from GEE dataset
@@ -55,9 +55,18 @@ def generate_aoi_tile_data(
     bbox = generate_bbox(latitude, longitude, size_km)
 
     # Need to process by month to work within GEE limits
+    # E.g. If start_date = 2021-12-01 and end_date = 2022-01-15
+    # Expected date_range is [2021-12-01, 2022-01-01, 2022-01-15]
+
+    # This generates the month starts
     date_range = pd.date_range(
         pd.Timestamp(start_date), pd.Timestamp(end_date), freq="MS"
-    )
+    ).tolist()
+    # This ensures the last time period is not cut-off.
+    # We have to add one day here because this is a timestamp.
+    # Since our end_date input param is inclusive, we need to adjust it for GEE.
+    # E.g. if end date is 2022-01-15, the GEE end date needs to be 2022-01-16-00:00:00 (midnight)
+    date_range.append(pd.Timestamp(end_date) + pd.DateOffset(1))
 
     all_dfs = []
 
