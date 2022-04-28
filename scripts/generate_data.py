@@ -171,7 +171,7 @@ def collect_hrsl(locations_df, hrsl_tif, id_col, bbox_size_km):
 )
 @click.option(
     "--start-date",
-    default="2021-12-01",
+    default="2021-01-01",
     help="Date to start collecting data",
 )
 @click.option(
