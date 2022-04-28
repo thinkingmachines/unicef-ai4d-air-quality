@@ -16,3 +16,55 @@ def aggregate_daily_aod(df):
     )
 
     return df
+
+
+def rescale_cams_aod(df):
+    # This is a normalizaton step to scale the data same as MAIAC AOD
+    df["total_aerosol_optical_depth_at_550nm_surface"] = df[
+        "total_aerosol_optical_depth_at_550nm_surface"
+    ].apply(lambda x: x * 1000)
+
+    return df
+
+
+def aggregate_daily_cams_aod(df):
+    # Add date column
+    df["date"] = df["time"].dt.date
+
+    # Aggregate by date and station. For each band, get mean, min, max, and median
+    df = df.groupby(["date", "station_code"], as_index=False, group_keys=False).agg(
+        # CAMS_AOD_047_mean=("total_aerosol_optical_depth_at_469nm_surface_mean", "mean"),
+        # CAMS_AOD_047_min=("total_aerosol_optical_depth_at_469nm_surface_min", "min"),
+        # CAMS_AOD_047_max=("total_aerosol_optical_depth_at_469nm_surface_max", "max"),
+        # CAMS_AOD_047_median=(
+        #     "total_aerosol_optical_depth_at_469nm_surface_median",
+        #     "median",
+        # ),
+        CAMS_AOD_055_mean=("total_aerosol_optical_depth_at_550nm_surface", "mean"),
+        CAMS_AOD_055_min=("total_aerosol_optical_depth_at_550nm_surface", "min"),
+        CAMS_AOD_055_max=("total_aerosol_optical_depth_at_550nm_surface", "max"),
+        CAMS_AOD_055_median=(
+            "total_aerosol_optical_depth_at_550nm_surface",
+            "median",
+        ),
+    )
+
+    return df
+
+
+def aggregate_daily_s5p_aerosol(df):
+    # Add date column
+    df["date"] = df["time"].dt.date
+
+    # Aggregate by date and station. For each band, get mean, min, max, and median
+    df = df.groupby(["date", "station_code"], as_index=False, group_keys=False).agg(
+        AAI_MEAN=("absorbing_aerosol_index", "mean"),
+        AAI_MIN=("absorbing_aerosol_index", "min"),
+        AAI_MAX=("absorbing_aerosol_index", "max"),
+        AAI_MEDIAN=(
+            "absorbing_aerosol_index",
+            "median",
+        ),
+    )
+
+    return df
