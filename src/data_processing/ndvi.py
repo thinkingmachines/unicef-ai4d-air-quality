@@ -1,15 +1,17 @@
 import pandas as pd
 
 
-def aggregate_daily_ndvi(ndvi_df):
+def aggregate_daily_ndvi(ndvi_df, params):
+
+    start_date = params["start_date"]
+    end_date = params["end_date"]
 
     # Add date column
     ndvi_df["date"] = ndvi_df["time"].dt.date
 
     # Generate date list
-    # TODO parametrize the start/end dates
     date_list = pd.DataFrame(
-        pd.date_range("2021-01-01", "2021-12-31", freq="D").date, columns=["date"]
+        pd.date_range(start_date, end_date, freq="D").date, columns=["date"]
     )
 
     # Get list of stations
