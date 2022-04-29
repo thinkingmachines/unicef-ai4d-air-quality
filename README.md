@@ -105,3 +105,22 @@ Other notes:
         * `python scripts/train.py --config-path=config/default.yaml`
             * Note: You can also just call the script without a config path `python scripts/train.py`, in which case it will use `config/default.yaml`.
 4. The training script should have generated results in a dated folder under `data/outputs`. The folder should contain the best model and its params, nested CV results, and the yaml config file used.
+
+<br/>
+<br/>
+
+# 📚 Generating a dataset with features
+We provide a script for re-producing our training dataset in `scripts/generate_data.py`. This can also be used to collect features for an arbitrary list of locations if, for example, if you'd like to predict PM2.5 for an area of interest over a certain time period.
+
+
+## Reproducing the training dataset
+To reproduce the training dataset in our experiments:
+1. Get the (a) daily pm2.5 ground truth and (b) station info CSV files from this [Google Drive folder](https://drive.google.com/drive/u/0/folders/10kZ3PcAf-epbZabiqjeXymxDXmbdwe-Z) and place them in your local `data/` folder. This file was taken from the [Air4Thai website](http://air4thai.pcd.go.th/webV2/history/). Some manual pre-processing had to be performed as well since the original format wasn't convenient for automated processing, and there were minor typos.
+
+2. Get the `tha_general_2020.tif` file from this [link](https://data.humdata.org/dataset/1ec16b2b-2a1d-4cf7-b766-0460b27b89ea/resource/c45c9659-5708-4e88-a589-6a5a8b0a0d81/download/tha_general_2020_geotiff.zip). Unzip the tif file into your `data/` folder. This HRSL population data is taken from [Humanitarian Data Exchange](https://data.humdata.org/dataset/thailand-high-resolution-population-density-maps-demographic-estimates).
+
+3. Sign-up for a [Google Earth Engine account](https://signup.earthengine.google.com/) if you don't have one yet, as the scripts uses the GEE API to collect some of the features. It will ask you to log-in when you run it.
+
+4. Run `export PYTHONPATH=. && python scripts/train.py --ground-truth-csv=data/2022-04-29_air4thai_daily_pm25.csv`
+
+5. The script should take around 30 minutes to complete for the 78 stations from Air4Thai. The generated CSV file should appear in your local `data/` folder.
