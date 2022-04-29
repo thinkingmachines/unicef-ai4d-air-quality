@@ -17,7 +17,24 @@ data_params:
     - v_component_of_wind_10m_mean
     - surface_pressure_mean
     - total_precipitation_daily
-model: XGBRegressor
+  impute_cols:
+    # AOD
+    - AOD_047_mean
+    - AOD_055_mean
+    # Other env. factors: vegetation
+    - evi_mean
+    # Human-related
+    - total_population
+    # Meteorological variables
+    - dewpoint_temperature_2m_mean
+    - temperature_2m_mean
+    - u_component_of_wind_10m_mean
+    - v_component_of_wind_10m_mean
+    - surface_pressure_mean
+    - total_precipitation_daily
+  # impute strategy from Simple Imputer ("mean", "median", "most_frequent")
+  impute_strategy: "mean"
+model: SVR
 model_params:
 out_dir: data/outputs/
 selector: VarianceThreshold
