@@ -22,6 +22,20 @@ def aggregate_daily_ndvi(ndvi_df):
         temp_df["station_code"] = station.station_code
         ndvi_canvas = pd.concat([ndvi_canvas, temp_df])
 
+    # NDVI DF from GEE could yield multiple values per date, so aggregate
+    ndvi_df = ndvi_df.groupby(
+        ["date", "station_code"], as_index=False, group_keys=False
+    ).agg(
+        NDVI_mean=("NDVI", "mean"),
+        NDVI_min=("NDVI", "min"),
+        NDVI_max=("NDVI", "max"),
+        NDVI_median=("NDVI", "median"),
+        EVI_mean=("EVI", "mean"),
+        EVI_min=("EVI", "min"),
+        EVI_max=("EVI", "max"),
+        EVI_median=("EVI", "median"),
+    )
+
     # Merge and forward fill to get values for dates that don't have NDVI readings
     ndvi_filled = ndvi_df.merge(
         ndvi_canvas, on=["date", "station_code"], how="right"
@@ -29,13 +43,4 @@ def aggregate_daily_ndvi(ndvi_df):
     ndvi_filled = ndvi_filled.fillna(method="ffill")
 
     # Select only relevant columns
-    ndvi_filled = ndvi_filled[
-        [
-            "station_code",
-            "date",
-            "NDVI",
-            "EVI",
-        ]
-    ]
-
     return ndvi_filled
