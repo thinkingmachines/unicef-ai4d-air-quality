@@ -1,4 +1,4 @@
-def aggregate_daily_era5(df):
+def aggregate_daily_era5(df, params):
 
     # Add date column
     df["date"] = df["time"].dt.date

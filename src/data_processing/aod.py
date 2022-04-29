@@ -1,4 +1,4 @@
-def aggregate_daily_aod(df):
+def aggregate_daily_aod(df, params):
 
     # Add date column
     df["date"] = df["time"].dt.date
@@ -18,7 +18,7 @@ def aggregate_daily_aod(df):
     return df
 
 
-def rescale_cams_aod(df):
+def rescale_cams_aod(df, params):
     # This is a normalizaton step to scale the data same as MAIAC AOD
     df["total_aerosol_optical_depth_at_550nm_surface"] = df[
         "total_aerosol_optical_depth_at_550nm_surface"
@@ -27,7 +27,7 @@ def rescale_cams_aod(df):
     return df
 
 
-def aggregate_daily_cams_aod(df):
+def aggregate_daily_cams_aod(df, params):
     # Add date column
     df["date"] = df["time"].dt.date
 
@@ -52,7 +52,7 @@ def aggregate_daily_cams_aod(df):
     return df
 
 
-def aggregate_daily_s5p_aerosol(df):
+def aggregate_daily_s5p_aerosol(df, params):
     # Add date column
     df["date"] = df["time"].dt.date
 

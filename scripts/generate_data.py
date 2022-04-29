@@ -65,8 +65,8 @@ def collect_gee_datasets(gee_datasets, start_date, end_date, locations_df, id_co
             station_gee_values_df[id_col] = location[id_col]
 
             # Pre-process
-            for preprocessor in preprocessors:
-                station_gee_values_df = preprocessor(station_gee_values_df)
+            for preprocessor, params in preprocessors:
+                station_gee_values_df = preprocessor(station_gee_values_df, params)
 
             # Add to main df
             all_dfs.append(station_gee_values_df)
@@ -219,7 +219,7 @@ def main(
             "bands": [
                 "absorbing_aerosol_index",
             ],
-            "preprocessors": [aod.aggregate_daily_s5p_aerosol],
+            "preprocessors": [(aod.aggregate_daily_s5p_aerosol, {})],
         },
         {
             "collection_id": "ECMWF/CAMS/NRT",
@@ -227,17 +227,25 @@ def main(
                 # "total_aerosol_optical_depth_at_469nm_surface", # Results in errors cause it can be missing sometimes
                 "total_aerosol_optical_depth_at_550nm_surface",
             ],
-            "preprocessors": [aod.rescale_cams_aod, aod.aggregate_daily_cams_aod],
+            "preprocessors": [
+                (aod.rescale_cams_aod, {}),
+                (aod.aggregate_daily_cams_aod, {}),
+            ],
         },
         {
             "collection_id": "MODIS/006/MCD19A2_GRANULES",  # Aerosol Optical Depth (AOD)
             "bands": ["Optical_Depth_047", "Optical_Depth_055"],
-            "preprocessors": [aod.aggregate_daily_aod],
+            "preprocessors": [(aod.aggregate_daily_aod, {})],
         },
         {
             "collection_id": "MODIS/006/MOD13A2",  # Vegetation
             "bands": ["NDVI", "EVI"],
-            "preprocessors": [ndvi.aggregate_daily_ndvi],
+            "preprocessors": [
+                (
+                    ndvi.aggregate_daily_ndvi,
+                    {"start_date": start_date, "end_date": end_date},
+                )
+            ],
         },
         {
             "collection_id": "ECMWF/ERA5_LAND/HOURLY",  # Meteorological Variables
@@ -249,7 +257,7 @@ def main(
                 "v_component_of_wind_10m",
                 "surface_pressure",
             ],
-            "preprocessors": [era5.aggregate_daily_era5],
+            "preprocessors": [(era5.aggregate_daily_era5, {})],
         },
     ]
 
