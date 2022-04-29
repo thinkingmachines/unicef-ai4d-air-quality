@@ -58,10 +58,10 @@ def aggregate_daily_s5p_aerosol(df):
 
     # Aggregate by date and station. For each band, get mean, min, max, and median
     df = df.groupby(["date", "station_code"], as_index=False, group_keys=False).agg(
-        AAI_MEAN=("absorbing_aerosol_index", "mean"),
-        AAI_MIN=("absorbing_aerosol_index", "min"),
-        AAI_MAX=("absorbing_aerosol_index", "max"),
-        AAI_MEDIAN=(
+        AAI_mean=("absorbing_aerosol_index", "mean"),
+        AAI_min=("absorbing_aerosol_index", "min"),
+        AAI_max=("absorbing_aerosol_index", "max"),
+        AAI_median=(
             "absorbing_aerosol_index",
             "median",
         ),
