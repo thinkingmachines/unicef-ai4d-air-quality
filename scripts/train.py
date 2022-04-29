@@ -35,23 +35,41 @@ def train(config_path):
     data_df = pd.read_csv(config.data_params.csv_path)
     logger.info(f"Loaded {len(data_df):,} rows from {config.data_params.csv_path}")
 
-    # Remove any rows with nulls
-    orig_count = len(data_df)
-    data_df.dropna(how="any", inplace=True)
-    data_df.reset_index(drop=True, inplace=True)
-    null_rows = orig_count - len(data_df)
-    if null_rows > 0:
-        logger.warning(
-            f"Dropped {null_rows:,} rows with nulls. Final data count: {len(data_df):,}"
-        )
+    # Remove (impute) any rows with nulls
+    impute_cols = config.data_params.impute_cols
+    strategy = config.data_params.impute_strategy
+    data_df = model_utils.simple_impute(df=data_df, cols=impute_cols, strategy=strategy)
 
     # Prepare features and target
     target_col = config.data_params.target_col
     feature_cols = config.data_params.infer_selected_features(data_df.columns)
     logger.info(f"Target: {target_col}, {len(feature_cols)} Features: {feature_cols}, ")
 
-    X = data_df[feature_cols]
-    y = data_df[target_col].values
+    # Check for nulls after impute
+    for col in feature_cols:
+        logger.info(f"{data_df[col].isna().sum()} rows with nulls for column {col}.")
+
+    # Remove null values
+    grp = config.dict()["spatial_cv_params"]["groups"]
+    filt = feature_cols + [target_col] + [grp]
+    reduced_df = data_df.loc[:, filt]
+
+    if reduced_df.isnull().values.any() > 0:
+        orig_count = len(reduced_df)
+        logger.warning(f"Removing any null rows. Initial data count: {orig_count:,}")
+
+        reduced_df.dropna(how="any", inplace=True)
+        reduced_df.reset_index(drop=True, inplace=True)
+
+        null_rows = orig_count - len(reduced_df)
+
+        if null_rows > 0:
+            logger.warning(
+                f"Dropped {null_rows:,} rows with nulls. Final data count: {len(reduced_df):,}"
+            )
+
+    X = reduced_df[feature_cols]
+    y = reduced_df[target_col].values
 
     # Prepare output dir
     out_dir = config.out_dir / datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
@@ -62,7 +80,7 @@ def train(config_path):
     nested_cv_results = model_utils.nested_cv(config.dict(), X, y, out_dir=out_dir)
     logger.info(f"\nNested CV results: {json.dumps(nested_cv_results, indent=4)}")
 
-    spatial_cv_results = model_utils.spatial_cv(config.dict(), data_df, X, y)
+    spatial_cv_results = model_utils.spatial_cv(config.dict(), reduced_df, X, y)
     logger.info(f"\nSpatial CV results: {json.dumps(spatial_cv_results, indent=4)}")
 
     cv = model_utils.get_cv(config.dict())
