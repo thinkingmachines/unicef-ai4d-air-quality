@@ -190,6 +190,9 @@ def main(
 ):
     BBOX_SIZE_KM = 1
 
+    # Auth with GEE
+    gee_utils.gee_auth(service_acct=False)
+
     # Read in desired AOI locations
     # Assumed that the CSV has an id column, latitude, and longitude at the minimum.
     locations_df = pd.read_csv(locations_csv)
@@ -261,7 +264,6 @@ def main(
         },
     ]
 
-    gee_utils.gee_auth(service_acct=False)
     gee_dfs = collect_gee_datasets(
         gee_datasets, start_date, end_date, locations_df, id_col=id_col
     )
