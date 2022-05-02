@@ -261,7 +261,7 @@ def main(
         },
     ]
 
-    gee_utils.gee_auth(service_acct=True)
+    gee_utils.gee_auth(service_acct=False)
     gee_dfs = collect_gee_datasets(
         gee_datasets, start_date, end_date, locations_df, id_col=id_col
     )

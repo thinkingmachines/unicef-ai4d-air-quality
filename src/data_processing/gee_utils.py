@@ -1,7 +1,6 @@
 import os
 
 import ee
-import google.auth
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
@@ -16,13 +15,17 @@ def gee_auth(service_acct=False):
         credentials = ee.ServiceAccountCredentials(service_account, service_account_key)
         ee.Initialize(credentials)
     else:
-        credentials, project = google.auth.default(
-            scopes=[
-                "https://www.googleapis.com/auth/earthengine",
-                "https://www.googleapis.com/auth/devstorage.full_control",
-            ]
-        )
-        ee.Initialize(credentials)
+        ee.Authenticate(auth_mode="paste")
+        ee.Initialize()
+        # The ff. version of auth is more convenient for not having to log-in every time the script is run.
+        # However, we're still figuring out how to make it work reliably, as it broke recently.
+        # credentials, project = google.auth.default(
+        #     scopes=[
+        #         "https://www.googleapis.com/auth/earthengine",
+        #         "https://www.googleapis.com/auth/devstorage.full_control",
+        #     ]
+        # )
+        # ee.Initialize(credentials)
 
 
 def generate_aoi_tile_data(
