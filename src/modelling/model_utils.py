@@ -217,7 +217,7 @@ def spatial_cv(c, df, X, y, k=5, out_dir=None):
         logger.info(f"Running Spatial Outer Fold: {index}")
         logger.info(f"Train length: {len(train_index)}")
 
-        X_train_cv = df.loc[train_index], df.loc[test_index]
+        X_train_cv = df.loc[train_index]
         X_train, X_test = X.loc[train_index], X.loc[test_index]
         y_train, y_test = y[train_index], y[test_index]
 
