@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 
 from src.config import settings
 from src.config.models import ExperimentConfig
-from src.modelling import eval_utils, model_utils
+from src.modelling import data_utils, eval_utils, model_utils
 
 
 @click.command()
@@ -35,15 +35,19 @@ def train(config_path):
     data_df = pd.read_csv(config.data_params.csv_path)
     logger.info(f"Loaded {len(data_df):,} rows from {config.data_params.csv_path}")
 
-    # Remove (impute) any rows with nulls
-    impute_cols = config.data_params.impute_cols
-    strategy = config.data_params.impute_strategy
-    data_df = model_utils.simple_impute(df=data_df, cols=impute_cols, strategy=strategy)
-
-    # Prepare features and target
+    # Prepare features, target, spatial grps
     target_col = config.data_params.target_col
     feature_cols = config.data_params.infer_selected_features(data_df.columns)
     logger.info(f"Target: {target_col}, {len(feature_cols)} Features: {feature_cols}, ")
+
+    # Remove (impute) any rows with nulls=
+    if config.data_params.impute_cols is None:
+        impute_cols = feature_cols
+    else:
+        impute_cols = config.data_params.impute_cols
+
+    strategy = config.data_params.impute_strategy
+    data_df = data_utils.simple_impute(df=data_df, cols=impute_cols, strategy=strategy)
 
     # Check for nulls after impute
     for col in feature_cols:
@@ -52,21 +56,7 @@ def train(config_path):
     # Remove null values
     grp = config.dict()["spatial_cv_params"]["groups"]
     filt = feature_cols + [target_col] + [grp]
-    reduced_df = data_df.loc[:, filt]
-
-    if reduced_df.isnull().values.any() > 0:
-        orig_count = len(reduced_df)
-        logger.warning(f"Removing any null rows. Initial data count: {orig_count:,}")
-
-        reduced_df.dropna(how="any", inplace=True)
-        reduced_df.reset_index(drop=True, inplace=True)
-
-        null_rows = orig_count - len(reduced_df)
-
-        if null_rows > 0:
-            logger.warning(
-                f"Dropped {null_rows:,} rows with nulls. Final data count: {len(reduced_df):,}"
-            )
+    reduced_df = data_utils.drop_nulls(data_df, cols=filt)
 
     X = reduced_df[feature_cols]
     y = reduced_df[target_col].values
@@ -80,7 +70,9 @@ def train(config_path):
     nested_cv_results = model_utils.nested_cv(config.dict(), X, y, out_dir=out_dir)
     logger.info(f"\nNested CV results: {json.dumps(nested_cv_results, indent=4)}")
 
-    spatial_cv_results = model_utils.spatial_cv(config.dict(), reduced_df, X, y)
+    spatial_cv_results = model_utils.spatial_cv(
+        config.dict(), reduced_df, X, y, out_dir=out_dir
+    )
     logger.info(f"\nSpatial CV results: {json.dumps(spatial_cv_results, indent=4)}")
 
     cv = model_utils.get_cv(config.dict())
@@ -133,6 +125,11 @@ def train(config_path):
         json.dump(spatial_cv_results, f, indent=4)
 
     # Save Model
+    joblib.dump(cv.best_estimator_, out_dir / "best_model.pkl")
+    with open(out_dir / "best_model_params.txt", "w") as f:
+        print(str(cv.best_estimator_), file=f)
+
+    # Save Predictions
     joblib.dump(cv.best_estimator_, out_dir / "best_model.pkl")
     with open(out_dir / "best_model_params.txt", "w") as f:
         print(str(cv.best_estimator_), file=f)

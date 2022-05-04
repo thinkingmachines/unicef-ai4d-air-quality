@@ -4,7 +4,6 @@ import os
 import numpy as np
 from loguru import logger
 from matplotlib import pyplot as plt
-from sklearn.impute import SimpleImputer
 from sklearn.model_selection import GridSearchCV, GroupKFold, KFold, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
@@ -212,9 +211,9 @@ def spatial_cv(c, df, X, y, k=5, out_dir=None):
     all_y_test = []
     all_y_pred = []
 
-    for index, train_index, test_index in zip(index, train_indices, test_indices):
+    for idx, train_index, test_index in zip(index, train_indices, test_indices):
 
-        logger.info(f"Running Spatial Outer Fold: {index}")
+        logger.info(f"Running Spatial Outer Fold: {idx}")
         logger.info(f"Train length: {len(train_index)}")
 
         X_train_cv = df.loc[train_index]
@@ -245,7 +244,7 @@ def spatial_cv(c, df, X, y, k=5, out_dir=None):
         for metric, value in result.items():
             outer_cv_result[metric].append(value)
 
-        logger.info(f"Outer Fold {index} Results: {result}")
+        logger.info(f"Outer Fold {idx} Results: {result}")
 
     mean_results = {}
     for metric, values in outer_cv_result.items():
@@ -257,27 +256,3 @@ def spatial_cv(c, df, X, y, k=5, out_dir=None):
         plt.clf()
 
     return dict(collections.ChainMap(*[mean_results, outer_cv_result]))
-
-
-def simple_impute(df, cols, strategy, missing=np.NaN):
-    orig_count = len(df)
-    logger.info(f"Initial data count: {orig_count:,}")
-
-    if strategy == "None":
-        logger.info(f"Removing all null rows (strategy = {strategy})")
-        orig_count = len(df)
-        df.dropna(how="any", inplace=True)
-        df.reset_index(drop=True, inplace=True)
-        null_rows = orig_count - len(df)
-        if null_rows > 0:
-            logger.warning(f"Dropped {null_rows:,} rows with nulls.")
-    else:
-        logger.info(f"Imputing values (strategy = {strategy})")
-        imputer = SimpleImputer(missing_values=missing, strategy=strategy)
-
-        for col in cols:
-            df[col] = imputer.fit_transform(df[col].values.reshape(-1, 1))
-
-    logger.info(f"Final data count: {len(df):,}")
-
-    return df
