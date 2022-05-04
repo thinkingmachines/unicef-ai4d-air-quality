@@ -17,6 +17,9 @@ data_params:
     - v_component_of_wind_10m_mean
     - surface_pressure_mean
     - total_precipitation_daily
+  impute_cols:
+  # impute strategy from Simple Imputer ("mean", "median", "most_frequent")
+  impute_strategy: "mean"
 model: XGBRegressor
 model_params:
 out_dir: data/outputs/

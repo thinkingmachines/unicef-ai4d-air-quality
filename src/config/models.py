@@ -11,6 +11,8 @@ class DataParams(BaseModel):
     target_col: str
     include_cols: List[str] = []
     ignore_cols: List[str] = []
+    impute_cols: Optional[list] = None
+    impute_strategy: Optional[str] = None
 
     def infer_selected_features(self, full_feature_list):
         if self.include_cols:

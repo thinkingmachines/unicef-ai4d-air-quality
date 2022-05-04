@@ -195,8 +195,8 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5, out_dir=None):
     return dict(collections.ChainMap(*[mean_results, outer_cv_result]))
 
 
-def spatial_cv(c, df, X, y, seed=settings.SEED, k=5):
-    cv_result = {metric: [] for metric in eval_utils.get_scoring()}
+def spatial_cv(c, df, X, y, k=5, out_dir=None):
+    outer_cv_result = {metric: [] for metric in eval_utils.get_scoring()}
 
     grp = c["spatial_cv_params"]["groups"]
     grp_vals = df[grp].astype(str).values
@@ -204,20 +204,55 @@ def spatial_cv(c, df, X, y, seed=settings.SEED, k=5):
     grp_kfold = GroupKFold(n_splits=k)
     spatial_fold = grp_kfold.split(df, y, grp_vals)
     train_indices, test_indices = [list(traintest) for traintest in zip(*spatial_fold)]
-    cv = [*zip(train_indices, test_indices)]
+    index = list(range(0, k))
 
     spatial_c = c.copy()
-    spatial_c["cv_params"]["cv"] = cv
 
-    cv = get_cv(spatial_c)
-    cv.fit(X, y)
+    all_y_test = []
+    all_y_pred = []
 
-    y_pred = cv.best_estimator_.predict(X)
-    result = eval_utils.evaluate(y, y_pred)
+    for idx, train_index, test_index in zip(index, train_indices, test_indices):
 
-    for metric, value in result.items():
-        cv_result[metric].append(value)
+        logger.info(f"Running Spatial Outer Fold: {idx}")
+        logger.info(f"Train length: {len(train_index)}")
 
-    logger.info(f"Results: {result}")
+        X_train_cv = df.loc[train_index]
+        X_train, X_test = X.loc[train_index], X.loc[test_index]
+        y_train, y_test = y[train_index], y[test_index]
 
-    return cv_result
+        # Getting spatial group kfold per outer fold
+        inner_grp_vals = X_train_cv[grp].astype(str).values
+        inner_grp_kfold = GroupKFold(n_splits=k)
+        inner_spatial_fold = inner_grp_kfold.split(X_train_cv, y_train, inner_grp_vals)
+        inner_train_indices, inner_test_indices = [
+            list(traintest) for traintest in zip(*inner_spatial_fold)
+        ]
+        cv = [*zip(inner_train_indices, inner_test_indices)]
+
+        spatial_c["cv_params"]["cv"] = cv
+
+        inner_cv = get_cv(spatial_c)
+        inner_cv.fit(X_train, y_train)
+
+        y_pred = inner_cv.best_estimator_.predict(X_test)
+        result = eval_utils.evaluate(y_test, y_pred)
+
+        # Accumulate all the y_test and y_pred pairs for producing combined scatterplot.
+        all_y_test.extend(y_test)
+        all_y_pred.extend(y_pred)
+
+        for metric, value in result.items():
+            outer_cv_result[metric].append(value)
+
+        logger.info(f"Outer Fold {idx} Results: {result}")
+
+    mean_results = {}
+    for metric, values in outer_cv_result.items():
+        mean_results["mean_" + metric] = np.mean(values)
+
+    if out_dir:
+        fig = eval_utils.plot_actual_vs_predicted(all_y_test, all_y_pred)
+        fig.savefig(os.path.join(out_dir, "scatterplot_nestedspatialcv_combined.png"))
+        plt.clf()
+
+    return dict(collections.ChainMap(*[mean_results, outer_cv_result]))
