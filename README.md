@@ -121,6 +121,6 @@ To reproduce the training dataset in our experiments:
 
 3. Sign-up for a [Google Earth Engine account](https://signup.earthengine.google.com/) if you don't have one yet, as the scripts uses the GEE API to collect some of the features. It will ask you to log-in when you run it.
 
-4. Run `export PYTHONPATH=. && python scripts/train.py --ground-truth-csv=data/2022-04-29_air4thai_daily_pm25.csv`
+4. Run `export PYTHONPATH=. && python scripts/generate_data.py --ground-truth-csv=data/2022-04-29_air4thai_daily_pm25.csv`
 
 5. The script should take around 30 minutes to complete for the 78 stations from Air4Thai. The generated CSV file should appear in your local `data/` folder.
