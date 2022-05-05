@@ -119,7 +119,7 @@ To reproduce the training dataset in our experiments:
 
 2. Get the `tha_general_2020.tif` file from this [link](https://data.humdata.org/dataset/1ec16b2b-2a1d-4cf7-b766-0460b27b89ea/resource/c45c9659-5708-4e88-a589-6a5a8b0a0d81/download/tha_general_2020_geotiff.zip). Unzip the tif file into your `data/` folder. This HRSL population data is taken from [Humanitarian Data Exchange](https://data.humdata.org/dataset/thailand-high-resolution-population-density-maps-demographic-estimates).
 
-3. Sign-up for a [Google Earth Engine account](https://signup.earthengine.google.com/) if you don't have one yet, as the scripts uses the GEE API to collect some of the features. It will ask you to log-in when you run it.
+3. Sign-up for a [Google Earth Engine account](https://signup.earthengine.google.com/) if you don't have one yet, as the script uses the GEE API to collect some of the features. It will ask you to log-in when you run it.
 
 4. Run `export PYTHONPATH=. && python scripts/generate_data.py --ground-truth-csv=data/2022-04-29_air4thai_daily_pm25.csv`
 
