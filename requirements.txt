@@ -435,6 +435,8 @@ requests==2.27.1
     #   ray
 rsa==4.8
     # via google-auth
+rtree==1.0.0
+    # via -r requirements.in
 scikit-learn==1.0.2
     # via
     #   -r requirements.in
@@ -539,6 +541,7 @@ typing-extensions==4.1.1
     #   kiwisolver
     #   pydantic
     #   redis
+    #   rtree
 uritemplate==3.0.1
     # via google-api-python-client
 urllib3==1.26.9
