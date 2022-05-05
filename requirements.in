@@ -15,6 +15,7 @@ pydantic==1.9.*
 python-dotenv==0.20.*
 pyyaml==6.*
 rasterstats==0.16.*
+rtree==1.0.*
 scikit-learn==1.0.*
 shap==0.40.*
 tqdm==4.64.*
