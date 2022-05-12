@@ -96,31 +96,36 @@ Other notes:
 <br/>
 
 # 🧠 Training a Regression Model
-1. Get a copy of the latest dataset in CSV format from our [Google Drive folder](https://drive.google.com/drive/u/0/folders/1IgN1fkVGJgIZXGp42uxXYT2OBeam1Etr) and place it in your local `data` folder.
+1. Get a copy of the latest dataset in CSV format from our [Google Drive folder](https://drive.google.com/drive/folders/1c4f1TJzW7uI9IgqXZY_08pJb1YvpevG1) and place it in your local `data` folder.
 2. Create a yaml config file with the training configuration that you want inside the `config` folder (see `config/default.yaml` for a sample).
-    * Note: this is where you specify the path to the CSV datset.
-3. Make sure your terminal's current working directory is the project root. Run the training script by running `make config-path=config/default.yaml train`, where you should replace `default.yaml` with the actual yaml file you created from step 1.
+    * Note: this is where you specify the path to the CSV dataset.
+3. Make sure your terminal's current working directory is the project root. Run the training script by running `make config-path=config/default.yaml train`, where you should replace `default.yaml` with the actual yaml file you created from step 2.
     * If you can't run Make commands on your system, you can also run the training script manually like this:
         * `export PYTHONPATH=.` (you only need to run this once per terminal sesion)
         * `python scripts/train.py --config-path=config/default.yaml`
             * Note: You can also just call the script without a config path `python scripts/train.py`, in which case it will use `config/default.yaml`.
-4. The training script should have generated results in a dated folder under `data/outputs`. The folder should contain the best model and its params, nested CV results, and the yaml config file used.
+4. The training script should have generated results in a dated folder under `data/outputs`. The folder should contain the best model and its params, metrics, SHAP charts, and the yaml config file used.
 
 <br/>
 <br/>
 
 # 📚 Generating a dataset with features
-We provide a script for re-producing our training dataset in `scripts/generate_data.py`. This can also be used to collect features for an arbitrary list of locations if, for example, if you'd like to predict PM2.5 for an area of interest over a certain time period.
+We provide a script for re-producing our training dataset in `scripts/generate_data.py` as a reference in case you want to understand the data collection procudure, or if you want to generate training data using your own ground truth.
+
+This script can also be used to collect features for an arbitrary list of locations for other purposes. For example, if you'd like to predict PM2.5 for an area of interest over a certain time period.
 
 
 ## Reproducing the training dataset
 To reproduce the training dataset in our experiments:
-1. Get the (a) daily pm2.5 ground truth and (b) station info CSV files from this [Google Drive folder](https://drive.google.com/drive/u/0/folders/10kZ3PcAf-epbZabiqjeXymxDXmbdwe-Z) and place them in your local `data/` folder. This file was taken from the [Air4Thai website](http://air4thai.pcd.go.th/webV2/history/). Some manual pre-processing had to be performed as well since the original format wasn't convenient for automated processing, and there were minor typos.
+1. Get the (a) daily pm2.5 ground truth and (b) station info CSV files from this [Google Drive Folder](https://drive.google.com/drive/folders/1N1B8SXSkmpnwp_YTDiCJqvLSx3A3-mwC) and place them in your local `data/` folder. Raw source of this data was taken from the [Air4Thai website](http://air4thai.pcd.go.th/webV2/history/), but some manual re-formatting had to be performed since the original format wasn't convenient for automated processing, and there were minor typos.
 
 2. Get the `tha_general_2020.tif` file from this [link](https://data.humdata.org/dataset/1ec16b2b-2a1d-4cf7-b766-0460b27b89ea/resource/c45c9659-5708-4e88-a589-6a5a8b0a0d81/download/tha_general_2020_geotiff.zip). Unzip the tif file into your `data/` folder. This HRSL population data is taken from [Humanitarian Data Exchange](https://data.humdata.org/dataset/thailand-high-resolution-population-density-maps-demographic-estimates).
 
 3. Sign-up for a [Google Earth Engine account](https://signup.earthengine.google.com/) if you don't have one yet, as the script uses the GEE API to collect some of the features. It will ask you to log-in when you run it.
 
-4. Run `export PYTHONPATH=. && python scripts/generate_data.py --ground-truth-csv=data/2022-04-29_air4thai_daily_pm25.csv`
+4. Run the data generation script. For example, generating the training dataset based on Air4Thai ground truth:
+ `export PYTHONPATH=. && python scripts/generate_data.py --locations-csv=data/2022-04-29-air4thai-th-stations.csv --ground-truth-csv=data/2022-04-29-air4thai-daily-pm25.csv`
+     * *Note: Update the CSV paths accordingly if you're using a different set of files*
 
-5. The script should take around 30 minutes to complete for the 78 stations from Air4Thai. The generated CSV file should appear in your local `data/` folder.
+
+5. Depending on your internet connection, the script might take around 30 minutes - 1 hour to complete for the 78 stations from Air4Thai. The generated CSV file should appear in your local `data/` folder.
