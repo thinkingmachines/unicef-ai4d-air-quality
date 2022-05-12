@@ -15,3 +15,12 @@ requirements:
 
 train:
 	export PYTHONPATH=. && python scripts/train.py --config-path=${config-path}
+
+air4thai-data:
+	export PYTHONPATH=. && python scripts/generate_data.py \
+	--locations-csv=data/2022-04-29-air4thai-th-stations.csv \
+	--ground-truth-csv=data/2022-04-29-air4thai-daily-pm25.csv \
+	--admin-bounds-shp=data/tha_admin_bounds_adm3/tha_admbnda_adm3_rtsd_20220121.shp \
+	--hrsl-tif=data/tha_general_2020.tif \
+	--start-date=2021-01-01 \
+	--end-date=2021-12-31
