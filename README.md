@@ -117,15 +117,19 @@ This script can also be used to collect features for an arbitrary list of locati
 
 ## Reproducing the training dataset
 To reproduce the training dataset in our experiments:
-1. Get the (a) daily pm2.5 ground truth and (b) station info CSV files from this [Google Drive Folder](https://drive.google.com/drive/folders/1N1B8SXSkmpnwp_YTDiCJqvLSx3A3-mwC) and place them in your local `data/` folder. Raw source of this data was taken from the [Air4Thai website](http://air4thai.pcd.go.th/webV2/history/), but some manual re-formatting had to be performed since the original format wasn't convenient for automated processing, and there were minor typos.
 
-2. Get the `tha_general_2020.tif` file from this [link](https://data.humdata.org/dataset/1ec16b2b-2a1d-4cf7-b766-0460b27b89ea/resource/c45c9659-5708-4e88-a589-6a5a8b0a0d81/download/tha_general_2020_geotiff.zip). Unzip the tif file into your `data/` folder. This HRSL population data is taken from [Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-tha).
+1. When you make a fresh clone of the repo, you should have an empty `data` folder in your project's root directory. Get a copy of the [data folder contents](https://drive.google.com/drive/u/0/folders/1Ni-OWGovH-4gV2VhJeao0jABMW_Wp2k_) and place them in your local `data` folder.
 
 3. Sign-up for a [Google Earth Engine account](https://signup.earthengine.google.com/) if you don't have one yet, as the script uses the GEE API to collect some of the features. It will ask you to log-in when you run it.
 
-4. Run the data generation script. For example, generating the training dataset based on Air4Thai ground truth:
- `export PYTHONPATH=. && python scripts/generate_data.py --locations-csv=data/2022-04-29-air4thai-th-stations.csv --ground-truth-csv=data/2022-04-29-air4thai-daily-pm25.csv`
-     * *Note: Update the CSV paths accordingly if you're using a different set of files*
+4. Run `make air4thai-data` to generate the training dataset based on Air4Thai ground truth.
+    * Otherwise, if you cannot run `make` commands or if you have custom parameters, copy the actual CLI command from the Makefile, edit params if needed, and paste into your terminal. E.g.: `export PYTHONPATH=. && python scripts/generate_data.py --locations-csv=data/2022-04-29-air4thai-th-stations.csv --ground-truth-csv=data/2022-04-29-air4thai-daily-pm25.csv --admin-bounds-shp=data/tha_admin_bounds_adm3/tha_admbnda_adm3_rtsd_20220121.shp`
 
+5. It depends on your internet connection, but the script might take around 1 hour to complete for the 78 stations from Air4Thai. The generated CSV file should appear in your local `data/` folder.
 
-5. Depending on your internet connection, the script might take around 30 minutes - 1 hour to complete for the 78 stations from Air4Thai. The generated CSV file should appear in your local `data/` folder.
+### Notes on the raw data files
+* The daily pm2.5 ground truth and station info CSV files from this are taken from the [Air4Thai website](http://air4thai.pcd.go.th/webV2/history/). Some manual pre-processing had to be performed as well since the original format wasn't convenient for automated processing, and there were minor typos.
+
+* The HRSL population tif file is taken from [Humanitarian Data Exchange](https://data.humdata.org/dataset/thailand-high-resolution-population-density-maps-demographic-estimates).
+
+* The Thai admin boundaries shapefile is also taken from the [Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-tha).

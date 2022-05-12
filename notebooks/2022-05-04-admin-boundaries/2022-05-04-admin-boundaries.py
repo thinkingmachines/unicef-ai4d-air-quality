@@ -13,7 +13,7 @@
 # ---
 
 # %% [markdown]
-# The purpose of this notebook is to add Thailand admin boundaries to an already existing dataset (CSV file). We will integrate this logic within the data generation script though, to avoid having to run multiple scripts/notebooks.
+# The purpose of this notebook is to add Thailand admin boundaries to an already existing dataset (CSV file). This logic is already integrated into the main data generation script though, so if you generated data using that, there should be no need to run this notebook.
 
 # %% [markdown]
 # # Imports
