@@ -119,7 +119,7 @@ This script can also be used to collect features for an arbitrary list of locati
 To reproduce the training dataset in our experiments:
 1. Get the (a) daily pm2.5 ground truth and (b) station info CSV files from this [Google Drive Folder](https://drive.google.com/drive/folders/1N1B8SXSkmpnwp_YTDiCJqvLSx3A3-mwC) and place them in your local `data/` folder. Raw source of this data was taken from the [Air4Thai website](http://air4thai.pcd.go.th/webV2/history/), but some manual re-formatting had to be performed since the original format wasn't convenient for automated processing, and there were minor typos.
 
-2. Get the `tha_general_2020.tif` file from this [link](https://data.humdata.org/dataset/1ec16b2b-2a1d-4cf7-b766-0460b27b89ea/resource/c45c9659-5708-4e88-a589-6a5a8b0a0d81/download/tha_general_2020_geotiff.zip). Unzip the tif file into your `data/` folder. This HRSL population data is taken from [Humanitarian Data Exchange](https://data.humdata.org/dataset/thailand-high-resolution-population-density-maps-demographic-estimates).
+2. Get the `tha_general_2020.tif` file from this [link](https://data.humdata.org/dataset/1ec16b2b-2a1d-4cf7-b766-0460b27b89ea/resource/c45c9659-5708-4e88-a589-6a5a8b0a0d81/download/tha_general_2020_geotiff.zip). Unzip the tif file into your `data/` folder. This HRSL population data is taken from [Humanitarian Data Exchange](https://data.humdata.org/dataset/cod-ab-tha).
 
 3. Sign-up for a [Google Earth Engine account](https://signup.earthengine.google.com/) if you don't have one yet, as the script uses the GEE API to collect some of the features. It will ask you to log-in when you run it.
 

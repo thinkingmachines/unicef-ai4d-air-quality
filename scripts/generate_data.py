@@ -86,8 +86,6 @@ def join_datasets(
     date_col="date",
     ground_truth_df=None,
 ):
-    # TODO: Population
-
     # Create DF with locations + start_date, end_date
     base_df = generate_locations_with_dates_df(
         locations_df, start_date, end_date, id_col=id_col, date_col=date_col
@@ -152,7 +150,7 @@ def collect_hrsl(locations_df, hrsl_tif, id_col, bbox_size_km):
 @click.command()
 @click.option(
     "--locations-csv",
-    default=settings.DATA_DIR / "air4thai_th_stations.csv",
+    default=settings.DATA_DIR / "2022-04-29-air4thai-th-stations.csv",
     help="Path to the CSV file containing the locations for which to generate data.",
 )
 @click.option(
