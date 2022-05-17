@@ -77,7 +77,13 @@ def collect_features_for_locations(
         ERA5_CONFIG,
     ],
 ):
+    # Create DF with locations + start_date, end_date
+    base_df = generate_locations_with_dates_df(
+        locations_df, start_date, end_date, id_col=id_col, date_col=date_col
+    )
+
     # Auth with GEE
+    logger.info("Authenticating with GEE...")
     gee_utils.gee_auth()
 
     # Compute HRSL stats
@@ -105,11 +111,6 @@ def collect_features_for_locations(
                 index=False,
             )
 
-    # Create DF with locations + start_date, end_date
-    base_df = generate_locations_with_dates_df(
-        locations_df, start_date, end_date, id_col=id_col, date_col=date_col
-    )
-
     # Merge HRSL
     # HRSL is a slow-moving feature, and so does not change depending on the date.
     base_df = base_df.merge(hrsl_df, on=[id_col], how="left")
@@ -124,9 +125,7 @@ def collect_features_for_locations(
     return base_df
 
 
-def generate_locations_with_dates_df(
-    df, start_date, end_date, id_col="id", date_col="date"
-):
+def generate_locations_with_dates_df(df, start_date, end_date, id_col, date_col):
     # We create a dummy date column just so we can use the ffill technique to construct one row for each date per station.
     df = df.copy()
     df[date_col] = pd.to_datetime(start_date, format="%Y-%m-%d")
