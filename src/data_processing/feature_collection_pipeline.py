@@ -173,16 +173,27 @@ def collect_gee_datasets(gee_datasets, start_date, end_date, locations_df, id_co
                 bands=bands,
                 cloud_filter=False,
             )
-            # Set the ID so we can join back the data later on
-            station_gee_values_df[id_col] = location[id_col]
 
-            # Pre-process
-            params = {"start_date": start_date, "end_date": end_date, "id_col": id_col}
-            for preprocessor in preprocessors:
-                station_gee_values_df = preprocessor(station_gee_values_df, params)
+            if len(station_gee_values_df) > 0:
 
-            # Add to main df
-            all_dfs.append(station_gee_values_df)
+                # Set the ID so we can join back the data later on
+                station_gee_values_df[id_col] = location[id_col]
+
+                # Pre-process
+                params = {
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "id_col": id_col,
+                }
+                for preprocessor in preprocessors:
+                    station_gee_values_df = preprocessor(station_gee_values_df, params)
+
+                # Add to main df
+                all_dfs.append(station_gee_values_df)
+            else:
+                logger.warning(
+                    f"No GEE data ({collection_id}) collected for location with {id_col}={location[id_col]}."
+                )
 
         gee_dfs[collection_id] = pd.concat(all_dfs, axis=0, ignore_index=True)
 
