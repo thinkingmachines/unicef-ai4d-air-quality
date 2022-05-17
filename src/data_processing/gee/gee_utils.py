@@ -7,14 +7,14 @@ from dotenv import load_dotenv
 from haversine import Direction, inverse_haversine
 
 
-def gee_auth(service_acct=False):
-    if service_acct:
+def gee_auth():
+    try:
         load_dotenv()
         service_account = os.environ["SERVICE_ACCOUNT"]
         service_account_key = os.environ["SERVICE_ACCOUNT_KEY"]
         credentials = ee.ServiceAccountCredentials(service_account, service_account_key)
         ee.Initialize(credentials)
-    else:
+    except Exception:
         ee.Authenticate(auth_mode="paste")
         ee.Initialize()
         # The ff. version of auth is more convenient for not having to log-in every time the script is run.
