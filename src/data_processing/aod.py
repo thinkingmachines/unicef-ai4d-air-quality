@@ -30,9 +30,10 @@ def rescale_cams_aod(df, params):
 def aggregate_daily_cams_aod(df, params):
     # Add date column
     df["date"] = df["time"].dt.date
+    id_col = params["id_col"]
 
     # Aggregate by date and station. For each band, get mean, min, max, and median
-    df = df.groupby(["date", "station_code"], as_index=False, group_keys=False).agg(
+    df = df.groupby(["date", id_col], as_index=False, group_keys=False).agg(
         # CAMS_AOD_047_mean=("total_aerosol_optical_depth_at_469nm_surface_mean", "mean"),
         # CAMS_AOD_047_min=("total_aerosol_optical_depth_at_469nm_surface_min", "min"),
         # CAMS_AOD_047_max=("total_aerosol_optical_depth_at_469nm_surface_max", "max"),
@@ -55,9 +56,10 @@ def aggregate_daily_cams_aod(df, params):
 def aggregate_daily_s5p_aerosol(df, params):
     # Add date column
     df["date"] = df["time"].dt.date
+    id_col = params["id_col"]
 
     # Aggregate by date and station. For each band, get mean, min, max, and median
-    df = df.groupby(["date", "station_code"], as_index=False, group_keys=False).agg(
+    df = df.groupby(["date", id_col], as_index=False, group_keys=False).agg(
         AAI_mean=("absorbing_aerosol_index", "mean"),
         AAI_min=("absorbing_aerosol_index", "min"),
         AAI_max=("absorbing_aerosol_index", "max"),
