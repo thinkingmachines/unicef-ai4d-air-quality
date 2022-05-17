@@ -16,6 +16,7 @@ def convert_latlon_to_geometry(df, lat_col="latitude", lon_col="longitude"):
 
 
 def generate_bbox_wkt(centroid_lat, centroid_lon, distance_km):
+    """Generates WKT string representing the bounding box for a given lat/lon coordinate"""
     centroid = (centroid_lat, centroid_lon)
     top_left = inverse_haversine(
         inverse_haversine(centroid, distance_km / 2, Direction.WEST),
@@ -39,3 +40,21 @@ def generate_bbox_wkt(centroid_lat, centroid_lon, distance_km):
     wkt_string = f"POLYGON(({tl_str}, {tr_str}, {br_str}, {bl_str}, {tl_str}))"
 
     return wkt_string
+
+
+def generate_bboxes(
+    locations_df,
+    bbox_size_km,
+    lat_col="latitude",
+    lon_col="longitude",
+    geometry_col="geometry",
+):
+    """Creates a bounding box geometry for a DF of lat/lon coordinates."""
+    locations_df = locations_df.copy()
+    locations_df[geometry_col] = locations_df.apply(
+        lambda row: generate_bbox_wkt(
+            row[lat_col], row[lon_col], distance_km=bbox_size_km
+        ),
+        axis=1,
+    )
+    return locations_df
