@@ -260,7 +260,7 @@ def main(
             "bands": [
                 "absorbing_aerosol_index",
             ],
-            "preprocessors": [(aod.aggregate_daily_s5p_aerosol, {})],
+            "preprocessors": [(aod.aggregate_daily_s5p_aerosol, {"id_col": id_col})],
         },
         {
             "collection_id": "ECMWF/CAMS/NRT",
@@ -270,13 +270,13 @@ def main(
             ],
             "preprocessors": [
                 (aod.rescale_cams_aod, {}),
-                (aod.aggregate_daily_cams_aod, {}),
+                (aod.aggregate_daily_cams_aod, {"id_col": id_col}),
             ],
         },
         {
             "collection_id": "MODIS/006/MCD19A2_GRANULES",  # Aerosol Optical Depth (AOD)
             "bands": ["Optical_Depth_047", "Optical_Depth_055"],
-            "preprocessors": [(aod.aggregate_daily_aod, {})],
+            "preprocessors": [(aod.aggregate_daily_aod, {"id_col": id_col})],
         },
         {
             "collection_id": "MODIS/006/MOD13A2",  # Vegetation
@@ -284,7 +284,7 @@ def main(
             "preprocessors": [
                 (
                     ndvi.aggregate_daily_ndvi,
-                    {"start_date": start_date, "end_date": end_date},
+                    {"start_date": start_date, "end_date": end_date, "id_col": id_col},
                 )
             ],
         },
@@ -298,7 +298,7 @@ def main(
                 "v_component_of_wind_10m",
                 "surface_pressure",
             ],
-            "preprocessors": [(era5.aggregate_daily_era5, {})],
+            "preprocessors": [(era5.aggregate_daily_era5, {"id_col": id_col})],
         },
     ]
 

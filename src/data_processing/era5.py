@@ -1,10 +1,12 @@
 def aggregate_daily_era5(df, params):
 
+    id_col = params["id_col"]
+
     # Add date column
     df["date"] = df["time"].dt.date
 
     # Aggregate by date and station
-    df = df.groupby(["date", "station_code"], as_index=False, group_keys=False).agg(
+    df = df.groupby(["date", id_col], as_index=False, group_keys=False).agg(
         dewpoint_temperature_2m_mean=("dewpoint_temperature_2m", "mean"),
         dewpoint_temperature_2m_min=("dewpoint_temperature_2m", "min"),
         dewpoint_temperature_2m_median=("dewpoint_temperature_2m", "median"),

@@ -5,6 +5,7 @@ def aggregate_daily_ndvi(ndvi_df, params):
 
     start_date = params["start_date"]
     end_date = params["end_date"]
+    id_col = params["id_col"]
 
     # Add date column
     ndvi_df["date"] = ndvi_df["time"].dt.date
@@ -15,19 +16,17 @@ def aggregate_daily_ndvi(ndvi_df, params):
     )
 
     # Get list of stations
-    station_list = ndvi_df[["station_code"]].drop_duplicates()
+    station_list = ndvi_df[[id_col]].drop_duplicates()
 
     # Create NDVI table template
     ndvi_canvas = pd.DataFrame()
     for idx, station in station_list.iterrows():
         temp_df = date_list
-        temp_df["station_code"] = station.station_code
+        temp_df[id_col] = station[id_col]
         ndvi_canvas = pd.concat([ndvi_canvas, temp_df])
 
     # NDVI DF from GEE could yield multiple values per date, so aggregate
-    ndvi_df = ndvi_df.groupby(
-        ["date", "station_code"], as_index=False, group_keys=False
-    ).agg(
+    ndvi_df = ndvi_df.groupby(["date", id_col], as_index=False, group_keys=False).agg(
         NDVI_mean=("NDVI", "mean"),
         NDVI_min=("NDVI", "min"),
         NDVI_max=("NDVI", "max"),
@@ -40,8 +39,8 @@ def aggregate_daily_ndvi(ndvi_df, params):
 
     # Merge and forward fill to get values for dates that don't have NDVI readings
     ndvi_filled = ndvi_df.merge(
-        ndvi_canvas, on=["date", "station_code"], how="right"
-    ).sort_values(["station_code", "date"])
+        ndvi_canvas, on=["date", id_col], how="right"
+    ).sort_values([id_col, "date"])
     ndvi_filled = ndvi_filled.fillna(method="ffill")
 
     # Select only relevant columns
