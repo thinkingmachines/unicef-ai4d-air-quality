@@ -129,11 +129,6 @@ def train(config_path):
     with open(out_dir / "best_model_params.txt", "w") as f:
         print(str(cv.best_estimator_), file=f)
 
-    # Save Predictions
-    joblib.dump(cv.best_estimator_, out_dir / "best_model.pkl")
-    with open(out_dir / "best_model_params.txt", "w") as f:
-        print(str(cv.best_estimator_), file=f)
-
     # Copy over config file so we keep track of the configuration
     with open(out_dir / "config.yaml", "w") as f:
         yaml.dump(raw_config_yaml, f, default_flow_style=False)
