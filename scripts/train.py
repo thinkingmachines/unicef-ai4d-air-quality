@@ -77,6 +77,8 @@ def train(config_path):
 
     cv = model_utils.get_cv(config.dict())
     cv.fit(X, y)
+    # This makes it easier to determine the actual feature columns when predicting later on
+    cv.best_estimator_.feature_names = feature_cols
     logger.info(f"Best estimator: {cv.best_estimator_}")
 
     # Generate SHAP charts for feature importance #
