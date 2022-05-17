@@ -78,7 +78,7 @@ def collect_features_for_locations(
     ],
 ):
     # Auth with GEE
-    gee_utils.gee_auth(service_acct=False)
+    gee_utils.gee_auth()
 
     # Compute HRSL stats
     logger.info("Computing population sums...")
