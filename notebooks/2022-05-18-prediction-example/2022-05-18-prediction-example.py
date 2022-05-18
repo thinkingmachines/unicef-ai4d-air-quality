@@ -7,13 +7,24 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.13.1
 #   kernelspec:
-#     display_name: Python 3.7.13 ('air-quality')
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
 # %% [markdown]
 # This notebook is for demonstrating how to use a trained PM2.5 prediction model to make predictions on a target area.
+# There is also a script version for just generating predictoins in `scripts/predict.py`. Both utilize the same underlying prediction logic.
+#
+# The input is a CSV/Dataframe of locations, represented by coordinates. In our sample notebook, our goal is to predict daily PM2.5 levels for the Mueang Chiang Mai admin level 2 district for the year 2021.
+#
+# To visualize the input:
+#
+# ![Mueang Chiang Mai Tile Centroids](img/chiangmai_centroids.png)
+#
+# (*This was generated with QGIS and exported to a CSV file*)
+#
+#
 
 # %% [markdown]
 # # Imports
@@ -25,32 +36,44 @@
 import re
 import sys
 
+import branca
+import folium
 import geopandas as gpd
 import joblib
 import numpy as np
 import pandas as pd
+from shapely import wkt
 
 sys.path.append("../../")
 
 from src.config import settings
-from src.data_processing import feature_collection_pipeline
+from src.data_processing import feature_collection_pipeline, geom_utils
+from src.prediction import predict_utils
 
 # %% [markdown]
 # # Parameters
 
 # %%
+DEBUG = True
 
 # CSV file for target roll-out location
-# CENTROIDS_PATH = "data/mueang_chiang_mai_tile_centroids.csv"
-CENTROIDS_PATH = "data/mueang_phuket_tile_centroids.csv"
+CENTROIDS_PATH = "data/mueang_chiang_mai_tile_centroids.csv"
 
+# Where to save the model predictions of  daily PM2.5 levels
+OUTPUT_PREDICTIONS_FILE = (
+    "data/chiangmai_2021_predictions.csv" if not DEBUG else "data/debug.csv"
+)
+
+# Desired date range
+START_DATE = "2021-01-01"
+END_DATE = "2021-12-31"
 
 # ID Column in the target CSV file
 ID_COL = "id"
 
-# Desired date range
-START_DATE = "2019-03-01"
-END_DATE = "2019-03-31"
+# What to name the column for predictions
+PRED_COL = "predicted_pm2.5"
+
 # Model being used was trained using 1km x 1km bounding box
 BBOX_SIZE_KM = 1
 
@@ -59,12 +82,6 @@ MODEL_PATH = settings.DATA_DIR / "latest_model.pkl"
 
 # Path to the population raster (In our study, we're using the Thai 2020 HRSL raster)
 HRSL_TIF = settings.DATA_DIR / "tha_general_2020.tif"
-
-# Where to save the model predictions of  daily PM2.5 levels
-OUTPUT_PREDICTIONS_FILE = "data/phuket_march2019_predictions.csv"
-
-# What to name the column for predictions
-PRED_COL = "predicted_pm2.5"
 
 
 # %% [markdown]
@@ -94,7 +111,11 @@ def load_centroids(centroids_path):
 
 
 # %%
-locations_df = load_centroids(CENTROIDS_PATH)[:]
+locations_df = load_centroids(CENTROIDS_PATH)
+
+if DEBUG:
+    locations_df = locations_df[:2]
+
 len(locations_df)
 
 # %%
@@ -103,71 +124,162 @@ locations_df.columns
 # %% [markdown]
 # # Predict
 
-# %% [markdown]
-# ## Collect Features
-
 # %%
-# Create base DF from the locations (collect the necessary features)
-base_df = feature_collection_pipeline.collect_features_for_locations(
-    locations_df=locations_df,
+results_df = predict_utils.predict(
+    locations_df,
     start_date=START_DATE,
     end_date=END_DATE,
     id_col=ID_COL,
     hrsl_tif=HRSL_TIF,
+    model_path=MODEL_PATH,
     bbox_size_km=BBOX_SIZE_KM,
-    # Customized the list of GEE datasets because the latest model doesn't use MAIAC
-    gee_datasets=[
-        feature_collection_pipeline.S5P_AAI_CONFIG,
-        feature_collection_pipeline.CAMS_AOD_CONFIG,
-        feature_collection_pipeline.NDVI_CONFIG,
-        feature_collection_pipeline.ERA5_CONFIG,
-    ],
+    pred_col=PRED_COL,
 )
 
-
 # %%
-# Load Model
-model = joblib.load(MODEL_PATH)
-
-# Filter to only the relevant columns
-keep_cols = model.feature_names  # This was saved from the train script
-ml_df = base_df[keep_cols]
-
-# Run model
-preds = model.predict(ml_df)
-base_df[PRED_COL] = preds
-base_df.to_csv(OUTPUT_PREDICTIONS_FILE, index=False)
+results_df.to_csv(OUTPUT_PREDICTIONS_FILE, index=False)
 
 
 # %% [markdown]
-# # Quick checks on predictions
-#
-# We print out quick summary stats and plot the histogram of predicted pm2.5 values for the district of Chiang Mai and Phuket.
-#
-# It was known that Chiang Mai in March 2019 had poor air quality due to burning season.
-#
-# On the other hand, we expect the air at Phuket to be cleaner since it is far away from agricultural lands that are burned.
+# # EDA on Predictions
+
+# %% [markdown] tags=[]
+# ## Utility Functions
 
 # %%
-# Check predictions for Chiang Mai in March 2019
+def load_results(results_path, pred_col=PRED_COL):
+    df = pd.read_csv(results_path)
+    # Post-processing: clip negative values to 0
+    df[pred_col] = df[pred_col].apply(lambda x: x if x > 0 else 0)
+    return df
 
-results_df = pd.read_csv("data/chiang_mai_march2019_predictions.csv")
-results_df = gpd.GeoDataFrame(
-    results_df, geometry=gpd.points_from_xy(results_df.longitude, results_df.latitude)
-)
-preds = results_df[PRED_COL]
-print(f"Min:{min(preds):.2f} - Max:{max(preds):.2f}; Mean={np.mean(preds):.2f}")
-results_df[PRED_COL].hist()
 
 # %%
-# Check predictions for Phuket in March 2019
+def aggregate_preds(
+    results_path, start_date=None, end_date=None, id_col=ID_COL, pred_col=PRED_COL
+):
+    # Initialize DF
+    df = load_results(results_path)
+    if start_date and end_date:
+        # Filter according to dates
+        date_mask = (df["date"] >= start_date) & (df["date"] <= end_date)
+        df = df[date_mask]
 
-results_df = pd.read_csv("data/phuket_march2019_predictions.csv")
-results_df = gpd.GeoDataFrame(
-    results_df, geometry=gpd.points_from_xy(results_df.longitude, results_df.latitude)
-)
-preds = results_df[PRED_COL]
-print(f"Min:{min(preds):.2f} - Max:{max(preds):.2f}; Mean={np.mean(preds):.2f}")
-results_df[PRED_COL].hist()
+    # Initialize GDF
+    df = geom_utils.generate_bboxes(
+        df, bbox_size_km=BBOX_SIZE_KM, geometry_col="geometry"
+    )
+    gdf = gpd.GeoDataFrame(df, geometry=df["geometry"].apply(lambda x: wkt.loads(x)))
+
+    # Get the average predicted value per tile
+    gdf = gdf.dissolve(by=[ID_COL], aggfunc="mean")
+
+    return gdf
+
+
+# %%
+def categorize_value(value):
+    if value >= 250.5:
+        return "hazardous"
+    if value >= 150.5:
+        return "very_unhealthy"
+    if value >= 55.5:
+        return "unhealthy"
+    if value >= 35.5:
+        return "unhealthy_for_sensitive_groups"
+    if value >= 12.1:
+        return "moderate"
+    return "good"
+
+
+def generate_pm25_cmap(min=0, max=500.0):
+    lower_bounds = [0.0, 12.1, 35.5, 55.5, 150.5, 250.5]
+    colors = ["green", "yellow", "orange", "red", "purple", "brown"]
+    step = branca.colormap.StepColormap(
+        colors, vmin=min, vmax=max, index=lower_bounds, caption="Predicted PM2.5 Levels"
+    )
+    return step
+
+
+# %%
+def viz_preds(gdf, tooltip=True, pred_col=PRED_COL):
+    gdf_centroid = gdf.dissolve().geometry.centroid.values[0]
+
+    # Categorize for the tooltip
+    gdf["category"] = gdf[pred_col].apply(lambda x: categorize_value(x))
+
+    m = folium.Map(
+        location=[gdf_centroid.y, gdf_centroid.x], width=800, height=800, zoom_start=12
+    )
+    style_kwds = {"opacity": 0.3}
+
+    gdf.explore(
+        pred_col, m=m, style_kwds=style_kwds, tooltip=tooltip, cmap=generate_pm25_cmap()
+    )
+    return m
+
+
+# %% [markdown]
+# ## Results File to perform EDA on
+
+# %%
+results_path = "data/predictions_chiangmai_2021.csv"
+
+# %% [markdown]
+# ## Annual PM2.5 Mean
+
+# %%
+df = load_results(results_path)
+df[PRED_COL].mean()
+
+# %% [markdown]
+# ## PM2.5 Levels per Month
+
+# %%
+df = load_results(results_path)
+df["month"] = pd.to_datetime(df["date"]).dt.month
+df["year"] = pd.to_datetime(df["date"]).dt.year
+summary = df[["month", "year", PRED_COL]].groupby(["month", "year"]).describe()
+summary.columns = summary.columns.droplevel()
+
+summary
+
+# %%
+summary.reset_index().plot.bar(x="month", y="mean", rot=0)
+
+# %% [markdown]
+# Agricultural burning season in Thailand varies from place to place, but is generally in the earlier parts of the year.
+#
+# This [article by iqair](https://www.iqair.com/blog/air-quality/thailand-2021-burning-season) conducted an analysis and considered Jan-March as the general burning season. Our model's predictions for Chiang Mai seem to conform to this.
+#
+# Furthermore, the trend seems to be consistent with the monthly mean PM2.5 levels reported by IQAir where the start of the year sees the highest levels of PM2.5, which lowers starting May, then increases again towards the end of the year.
+#
+# ![Image taken from: https://www.iqair.com/blog/air-quality/thailand-2021-burning-season](img/chiangmai_monthly_averages_iqair.png)
+
+# %% [markdown]
+# ## Visualize Certain Months
+
+# %%
+# Infer the columns used by the model for simplicity in the viz
+model = joblib.load(MODEL_PATH)
+keep_cols = [
+    ID_COL,
+    PRED_COL,
+] + model.feature_names  # This was saved from the train script
+
+# %%
+# March
+gdf = aggregate_preds(results_path, start_date="2021-03-01", end_date="2021-03-31")
+viz_preds(gdf, tooltip=keep_cols)
+
+# %%
+# June
+gdf = aggregate_preds(results_path, start_date="2021-06-01", end_date="2021-06-30")
+viz_preds(gdf, tooltip=keep_cols)
+
+# %%
+# December
+gdf = aggregate_preds(results_path, start_date="2021-12-01", end_date="2021-12-31")
+viz_preds(gdf, tooltip=keep_cols)
 
 # %%
