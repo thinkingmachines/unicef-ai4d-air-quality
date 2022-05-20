@@ -14,17 +14,23 @@
 
 # %% [markdown]
 # This notebook is for demonstrating how to use a trained PM2.5 prediction model to make predictions on a target area.
-# There is also a script version for just generating predictoins in `scripts/predict.py`. Both utilize the same underlying prediction logic.
+# There is also a script version for just generating predictions in `scripts/predict.py`. Both utilize the same underlying prediction logic.
 #
-# The input is a CSV/Dataframe of locations, represented by coordinates. In our sample notebook, our goal is to predict daily PM2.5 levels for the Mueang Chiang Mai admin level 2 district for the year 2021.
+# The input is a CSV/Dataframe of locations, represented by coordinates. The file should have the ff. three columns: `id`, `longitude`, and `latitude`
 #
-# To visualize the input:
+# In our sample notebook, our goal is to predict daily PM2.5 levels for the Mueang Chiang Mai admin level 2 district for the year 2021.
+#
+# To visualize this input (each coordinate is a row in the CSV file):
 #
 # ![Mueang Chiang Mai Tile Centroids](img/chiangmai_centroids.png)
 #
 # (*This was generated with QGIS and exported to a CSV file*)
 #
 #
+#
+# To run this notebook as is, please get a copy of the `tha_general_20202.tif` and `mueang_chiang_mai_tile_centroids.csv` files [here](https://drive.google.com/file/d/1jl1OgrLgnngynVQLTE_s8dnOkV6dIwg6/view?usp=sharing), and place it in the main `data` folder in the project root.
+#
+# Note: Depending on your internet connection, the predict function can take a while because it needs to download the datasets from GEE and collect the necessary features. If you just want to do an EDA and inspect the output, we also provide the resulting daily 2021 predictions for the Mueang Chiang Mai district in our [Google Drive folder](https://drive.google.com/file/d/1C1JpNn6NkrhUWI8EdSjUPM5hmnvpglHY/view?usp=sharing) (`predictions_chiangmai_2021.csv`) so you can skip running the prediction step.
 
 # %% [markdown]
 # # Imports
@@ -33,40 +39,46 @@
 # %load_ext autoreload
 # %autoreload 2
 
-import re
 import sys
 
 import branca
 import folium
 import geopandas as gpd
-import joblib
-import numpy as np
 import pandas as pd
 from shapely import wkt
 
 sys.path.append("../../")
 
 from src.config import settings
-from src.data_processing import feature_collection_pipeline, geom_utils
+from src.data_processing import geom_utils
 from src.prediction import predict_utils
 
 # %% [markdown]
 # # Parameters
 
 # %%
-DEBUG = True
-
-# CSV file for target roll-out location
-CENTROIDS_PATH = "data/mueang_chiang_mai_tile_centroids.csv"
-
-# Where to save the model predictions of  daily PM2.5 levels
-OUTPUT_PREDICTIONS_FILE = (
-    "data/chiangmai_2021_predictions.csv" if not DEBUG else "data/debug.csv"
-)
+# If True, prediction will be run on just a small subset of locations
+DEBUG = False
 
 # Desired date range
 START_DATE = "2021-01-01"
 END_DATE = "2021-12-31"
+
+# CSV file for target roll-out location
+CENTROIDS_PATH = settings.DATA_DIR / "mueang_chiang_mai_tile_centroids.csv"
+
+# Where to save the model predictions of  daily PM2.5 levels
+OUTPUT_PREDICTIONS_FILE = (
+    settings.DATA_DIR / "chiangmai_2021_predictions.csv"
+    if not DEBUG
+    else "data/debug.csv"
+)
+
+# Path to the model to be used for prediction
+MODEL_PATH = settings.DATA_DIR / "latest_model.pkl"
+
+# Path to the population raster (In our study, we're using the Thai 2020 HRSL raster)
+HRSL_TIF = settings.DATA_DIR / "tha_general_2020.tif"
 
 # ID Column in the target CSV file
 ID_COL = "id"
@@ -77,67 +89,35 @@ PRED_COL = "predicted_pm2.5"
 # Model being used was trained using 1km x 1km bounding box
 BBOX_SIZE_KM = 1
 
-# Path to the model to be used for prediction
-MODEL_PATH = settings.DATA_DIR / "latest_model.pkl"
-
-# Path to the population raster (In our study, we're using the Thai 2020 HRSL raster)
-HRSL_TIF = settings.DATA_DIR / "tha_general_2020.tif"
-
-
 # %% [markdown]
 # # Load Area of Interest
 
 # %%
-def extract_lon_lat(wkt_string_point):
-    regex = r"[0-9-\.]+"
-    parsed_geom = re.findall(regex, wkt_string_point)
-    parsed_geom = [float(i) for i in parsed_geom]
-    assert len(parsed_geom) == 2
-    return parsed_geom[0], parsed_geom[1]
-
-
-def load_centroids(centroids_path):
-    locations_gdf = gpd.read_file(centroids_path)
-    all_lon_lat = locations_gdf["WKT"].apply(lambda x: extract_lon_lat(x)).tolist()
-    all_lon, all_lat = zip(*all_lon_lat)
-
-    locations_gdf["longitude"] = all_lon
-    locations_gdf["latitude"] = all_lat
-
-    locations_df = pd.DataFrame(locations_gdf)
-    locations_df.drop(["geometry", "WKT"], axis=1, inplace=True)
-
-    return locations_df
-
-
-# %%
-locations_df = load_centroids(CENTROIDS_PATH)
-
-if DEBUG:
-    locations_df = locations_df[:2]
-
-len(locations_df)
-
-# %%
-locations_df.columns
+locations_df = pd.read_csv(CENTROIDS_PATH)
+locations_df.head()
 
 # %% [markdown]
 # # Predict
+#
+#
 
 # %%
 results_df = predict_utils.predict(
     locations_df,
     start_date=START_DATE,
     end_date=END_DATE,
-    id_col=ID_COL,
     hrsl_tif=HRSL_TIF,
     model_path=MODEL_PATH,
     bbox_size_km=BBOX_SIZE_KM,
+    id_col=ID_COL,
     pred_col=PRED_COL,
 )
 
 # %%
 results_df.to_csv(OUTPUT_PREDICTIONS_FILE, index=False)
+
+# %%
+results_df.columns
 
 
 # %% [markdown]
@@ -223,7 +203,7 @@ def viz_preds(gdf, tooltip=True, pred_col=PRED_COL):
 # ## Results File to perform EDA on
 
 # %%
-results_path = "data/predictions_chiangmai_2021.csv"
+results_path = settings.DATA_DIR / "predictions_chiangmai_2021.csv"
 
 # %% [markdown]
 # ## Annual PM2.5 Mean
@@ -260,12 +240,7 @@ summary.reset_index().plot.bar(x="month", y="mean", rot=0)
 # ## Visualize Certain Months
 
 # %%
-# Infer the columns used by the model for simplicity in the viz
-model = joblib.load(MODEL_PATH)
-keep_cols = [
-    ID_COL,
-    PRED_COL,
-] + model.feature_names  # This was saved from the train script
+keep_cols = [ID_COL, PRED_COL, "category"]
 
 # %%
 # March
@@ -275,11 +250,6 @@ viz_preds(gdf, tooltip=keep_cols)
 # %%
 # June
 gdf = aggregate_preds(results_path, start_date="2021-06-01", end_date="2021-06-30")
-viz_preds(gdf, tooltip=keep_cols)
-
-# %%
-# December
-gdf = aggregate_preds(results_path, start_date="2021-12-01", end_date="2021-12-31")
 viz_preds(gdf, tooltip=keep_cols)
 
 # %%

@@ -1,36 +1,12 @@
-import re
 from datetime import datetime
 
 import click
-import geopandas as gpd
 import pandas as pd
 from loguru import logger
 
 from src.config import settings
 from src.data_processing import geom_utils
 from src.prediction import predict_utils
-
-
-def extract_lon_lat(wkt_string_point):
-    regex = r"[0-9-\.]+"
-    parsed_geom = re.findall(regex, wkt_string_point)
-    parsed_geom = [float(i) for i in parsed_geom]
-    assert len(parsed_geom) == 2
-    return parsed_geom[0], parsed_geom[1]
-
-
-def load_centroids(centroids_path):
-    locations_gdf = gpd.read_file(centroids_path)
-    all_lon_lat = locations_gdf["WKT"].apply(lambda x: extract_lon_lat(x)).tolist()
-    all_lon, all_lat = zip(*all_lon_lat)
-
-    locations_gdf["longitude"] = all_lon
-    locations_gdf["latitude"] = all_lat
-
-    locations_df = pd.DataFrame(locations_gdf)
-    locations_df.drop(["geometry", "WKT"], axis=1, inplace=True)
-
-    return locations_df
 
 
 @click.command()
@@ -93,7 +69,7 @@ def main(
     # This depends on the model. Our model is trained on agggregated features 1km x 1km around the station.
     BBOX_SIZE_KM = 1
 
-    locations_df = load_centroids(locations_csv)
+    locations_df = pd.read_csv(locations_csv)
 
     if debug:
         logger.warning("Running in debug mode. Trying out on 2 locations only.")
