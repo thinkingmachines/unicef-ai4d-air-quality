@@ -16,7 +16,7 @@
 # This notebook is for demonstrating how to use a trained PM2.5 prediction model to make predictions on a target area.
 # There is also a script version for just generating predictions in `scripts/predict.py`. Both utilize the same underlying prediction logic.
 #
-# The input is a CSV/Dataframe of locations, represented by coordinates. The file should have the ff. three columns: `id`, `longitude`, and `latitude`
+# The input is a CSV/Dataframe of target locations, represented by coordinates. The file should have the ff. three columns: `id`, `longitude`, and `latitude`
 #
 # In our sample notebook, our goal is to predict daily PM2.5 levels for the Mueang Chiang Mai admin level 2 district for the year 2021.
 #
@@ -24,13 +24,33 @@
 #
 # ![Mueang Chiang Mai Tile Centroids](img/chiangmai_centroids.png)
 #
-# (*This was generated with QGIS and exported to a CSV file*)
+# (*This was generated with QGIS and exported to a CSV file. The points are centroids of 1km x 1km tiles across the whole distrtict.*)
 #
 #
+
+# %% [markdown]
+# # Pre-requisites
+
+# %% [markdown]
+# ## Downloading the necessary files
+
+# %% [markdown]
+# We need some data/model files to run this notebook. The most convenient way is to download this [Gdrive folder](https://drive.google.com/drive/u/0/folders/1Ni-OWGovH-4gV2VhJeao0jABMW_Wp2k_) and place it in your local `data` folder in the project root. That is, this `data` folder on GDrive should correspond to your local `data/` folder.
 #
-# To run this notebook as is, please get a copy of the `tha_general_20202.tif` and `mueang_chiang_mai_tile_centroids.csv` files [here](https://drive.google.com/file/d/1jl1OgrLgnngynVQLTE_s8dnOkV6dIwg6/view?usp=sharing), and place it in the main `data` folder in the project root.
+# If you don't want to download all those files however, you can also manually download the ff. and place them in your local `data/` folder:
+# - `mueang_chiang_mai_tile_centroids.csv`
+# - `final_openaq_model.pkl`
+# - `tha_general_20202.tif`
+# - `predictions_chiangmai_2021.csv` *(in case you want to skip running the model and just want to run the EDA cells on the 2021 chiang mai predictions)*
 #
-# Note: Depending on your internet connection, the predict function can take a while because it needs to download the datasets from GEE and collect the necessary features. If you just want to do an EDA and inspect the output, we also provide the resulting daily 2021 predictions for the Mueang Chiang Mai district in our [Google Drive folder](https://drive.google.com/file/d/1C1JpNn6NkrhUWI8EdSjUPM5hmnvpglHY/view?usp=sharing) (`predictions_chiangmai_2021.csv`) so you can skip running the prediction step.
+#
+# *Note: Depending on your internet connection and on how many days your predicting for, the run can take a while because it needs to download the datasets from GEE and collect the necessary features.*
+
+# %% [markdown]
+# ## Sign-up for a GEE account
+
+# %% [markdown]
+# The feature collection functions utilize the GEE API to collect data. As such, you will be prompted to log-in when you run the predict function. Sign-up for an account if you haven't yet: https://signup.earthengine.google.com/
 
 # %% [markdown]
 # # Imports
@@ -62,14 +82,14 @@ DEBUG = False
 
 # Desired date range
 START_DATE = "2021-01-01"
-END_DATE = "2021-12-31"
+END_DATE = "2021-01-31"
 
 # CSV file for target roll-out location
 CENTROIDS_PATH = settings.DATA_DIR / "mueang_chiang_mai_tile_centroids.csv"
 
 # Where to save the model predictions of  daily PM2.5 levels
 OUTPUT_PREDICTIONS_FILE = (
-    settings.DATA_DIR / "chiangmai_2021_predictions.csv"
+    settings.DATA_DIR / "chiangmai_january_2021_predictions.csv"
     if not DEBUG
     else "data/debug.csv"
 )
