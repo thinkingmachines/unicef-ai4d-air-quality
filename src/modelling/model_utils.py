@@ -183,6 +183,11 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5, out_dir=None):
 
         logger.info(f"Outer Fold {index} Results: {result}")
 
+        if out_dir:
+            fig = eval_utils.plot_actual_vs_predicted(y_test, y_pred)
+            fig.savefig(os.path.join(out_dir, f"scatterplot_nestedcv_{index}.png"))
+            plt.clf()
+
     mean_results = {}
     for metric, values in outer_cv_result.items():
         mean_results["mean_" + metric] = np.mean(values)
@@ -245,6 +250,11 @@ def spatial_cv(c, df, X, y, k=5, out_dir=None):
             outer_cv_result[metric].append(value)
 
         logger.info(f"Outer Fold {idx} Results: {result}")
+
+        if out_dir:
+            fig = eval_utils.plot_actual_vs_predicted(y_test, y_pred)
+            fig.savefig(os.path.join(out_dir, f"scatterplot_nestedspatialcv_{idx}.png"))
+            plt.clf()
 
     mean_results = {}
     for metric, values in outer_cv_result.items():
