@@ -39,13 +39,23 @@ def predict(
     )
 
     logger.info("Running the model...")
+    base_df[pred_col] = predict_directly(base_df, model_path)
 
+    return base_df
+
+
+def predict_directly(data_df, model_path):
     # Load Model
     model = joblib.load(model_path)
 
     # Filter to only the relevant columns
     keep_cols = model.feature_names  # This was saved from the train script
-    ml_df = base_df[keep_cols]
+    ml_df = data_df[keep_cols]
+
+    # Print out % missing values per feature
+    for keep_col in keep_cols:
+        pct_missing = len(data_df[data_df[keep_col].isna()]) / len(data_df)
+        logger.debug(f"{keep_col} missing = {pct_missing:.2%}")
 
     # Run model
     preds = model.predict(ml_df)
@@ -53,6 +63,4 @@ def predict(
     # Post-process to avoid negative values
     preds = np.clip(preds, 0, 500)
 
-    base_df[pred_col] = preds
-
-    return base_df
+    return preds
