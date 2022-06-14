@@ -1,6 +1,12 @@
+from collections import Counter
+
 import numpy as np
+from imblearn.over_sampling import SMOTE
 from loguru import logger
 from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import LabelEncoder
+
+from src.config import settings
 
 # impute_cols if empty, will be interpreted as we want to impute for all the feature columns.
 
@@ -45,3 +51,36 @@ def drop_nulls(df, cols):
         logger.warning(f"No null rows. Initial data count: {orig_count:,}")
 
     return reduced_df
+
+
+def balance_data(df, label, seed=settings.SEED):
+    """Returns a balanced dataset based on set target label
+    Args:
+        df (dataframe): A dataframe for training
+        label (string): target variable for oversampling
+        seed (int): random seed for sampling
+    Returns:
+        dataframe: balanced df
+    """
+    logger.info(f"Balancing data (target col = {label})")
+    # Generate X and y
+    X = df.drop(columns=[label])
+    y = df[label].values
+
+    encoder = LabelEncoder()
+    y = encoder.fit_transform(y)
+
+    # Oversampling
+    oversample = SMOTE(random_state=seed)
+    X_os, y_os = oversample.fit_resample(X, y)
+
+    # summarize distribution
+    counter = Counter(y_os)
+    for k, v in counter.items():
+        per = v / len(y) * 100
+        print(f"Class={k}, n={v} ({per:.3f}%)")
+
+    balanced_df = X_os.copy()
+    balanced_df[label] = encoder.inverse_transform(y_os)
+
+    return balanced_df
