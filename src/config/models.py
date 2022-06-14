@@ -13,6 +13,7 @@ class DataParams(BaseModel):
     ignore_cols: List[str] = []
     impute_cols: Optional[list] = None
     impute_strategy: Optional[str] = None
+    balance_target_label: Optional[str] = None
 
     def infer_selected_features(self, full_feature_list):
         if self.include_cols:
