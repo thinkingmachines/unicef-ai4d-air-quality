@@ -58,8 +58,16 @@ def train(config_path):
     filt = feature_cols + [target_col] + [grp]
     reduced_df = data_utils.drop_nulls(data_df, cols=filt)
 
-    X = reduced_df[feature_cols]
-    y = reduced_df[target_col].values
+    # Oversampling the dataset
+    if config.data_params.balance_target_label is None:
+        final_df = reduced_df.copy()
+    else:
+        target_label = str(config.data_params.balance_target_label)
+        final_df = data_utils.balance_data(reduced_df, label=target_label)
+
+    # Generate X and y for training
+    X = final_df[feature_cols]
+    y = final_df[target_col].values
 
     # Prepare output dir
     out_dir = config.out_dir / datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
@@ -70,8 +78,11 @@ def train(config_path):
     nested_cv_results = model_utils.nested_cv(config.dict(), X, y, out_dir=out_dir)
     logger.info(f"\nNested CV results: {json.dumps(nested_cv_results, indent=4)}")
 
+    # spatial_cv_results = model_utils.spatial_cv(
+    #     config.dict(), reduced_df, X, y, out_dir=out_dir
+    # )
     spatial_cv_results = model_utils.spatial_cv(
-        config.dict(), reduced_df, X, y, out_dir=out_dir
+        config.dict(), final_df, X, y, out_dir=out_dir
     )
     logger.info(f"\nSpatial CV results: {json.dumps(spatial_cv_results, indent=4)}")
 
@@ -102,7 +113,10 @@ def train(config_path):
 
         # Save Feature Importance -  (simplified shap plot - similar to SHAP's bar chart but colored accdg to correlation)
         eval_utils.generate_simplified_shap(
-            shap_df, X, out_dir / "shap_summary_custom_bar.png"
+            shap_df,
+            X,
+            out_dir
+            # out_dir / "shap_summary_custom_bar.png"
         )
 
         # Save Feature Importance -  (raw SHAP summary plots)
