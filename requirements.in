@@ -27,3 +27,4 @@ xgboost==1.5.*
 shap==0.40.*
 matplotlib==3.5.*
 pre-commit==2.18.*
+imbalanced-learn==0.9.*

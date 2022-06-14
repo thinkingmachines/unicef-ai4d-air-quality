@@ -155,6 +155,8 @@ idna==3.3
     # via
     #   anyio
     #   requests
+imbalanced-learn==0.9.0
+    # via -r requirements.in
 importlib-metadata==4.11.3
     # via
     #   click
@@ -198,6 +200,7 @@ jinja2==3.1.1
 joblib==1.1.0
     # via
     #   -r requirements.in
+    #   imbalanced-learn
     #   scikit-learn
 json5==0.9.6
     # via jupyterlab-server
@@ -308,6 +311,7 @@ numpy==1.21.5
     # via
     #   -r requirements.in
     #   folium
+    #   imbalanced-learn
     #   lightgbm
     #   mapclassify
     #   matplotlib
@@ -454,12 +458,14 @@ rtree==1.0.0
 scikit-learn==1.0.2
     # via
     #   -r requirements.in
+    #   imbalanced-learn
     #   lightgbm
     #   mapclassify
     #   shap
     #   tune-sklearn
 scipy==1.7.3
     # via
+    #   imbalanced-learn
     #   lightgbm
     #   mapclassify
     #   scikit-learn
@@ -509,7 +515,9 @@ terminado==0.13.3
     #   jupyter-server
     #   notebook
 threadpoolctl==3.1.0
-    # via scikit-learn
+    # via
+    #   imbalanced-learn
+    #   scikit-learn
 tinycss2==1.1.1
     # via nbconvert
 toml==0.10.2
