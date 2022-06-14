@@ -118,6 +118,10 @@ def generate_simplified_shap(
     k2 = k.merge(corr_df, on="feature", how="inner")
     k2 = k2.nlargest(top_n, "SHAP_abs")
     k2 = k2.sort_values(by="SHAP_abs", ascending=True)
+
+    # Save SHAP values
+    k2.drop(columns=["sign"]).to_csv(f"{dir}/shap_values_bar.csv")
+
     colorlist = k2["sign"]
 
     ax = k2.plot.barh(
@@ -133,5 +137,5 @@ def generate_simplified_shap(
     )
     plt.rcParams.update({"font.size": 20})
 
-    plt.savefig(dir, bbox_inches="tight")
+    plt.savefig(f"{dir}/shap_summary_custom_bar.png", bbox_inches="tight")
     plt.clf()
