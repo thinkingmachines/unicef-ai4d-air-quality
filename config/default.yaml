@@ -23,9 +23,11 @@ data_params:
   impute_cols:
   # impute strategy from Simple Imputer ("mean", "median", "most_frequent")
   impute_strategy: "mean"
-  balance_target_label: ADM1_PCODE
+  balance_target_label:
+  # ADM1_PCODE
 
-model: XGBRegressor
+model: RandomForestRegressor
+# XGBRegressor
 model_params:
 out_dir: data/outputs/
 selector: VarianceThreshold
