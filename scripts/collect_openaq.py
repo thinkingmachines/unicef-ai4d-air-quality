@@ -58,8 +58,8 @@ def main(country_code, start_date, end_date):
     # Save to CSV
     raw_path = f"raw_data_{run_timestamp}.csv"
 
-    daily_pm25_path = f"daily-pm25_{run_timestamp}.csv"
-    station_list_path = f"station-list_{run_timestamp}.csv"
+    daily_pm25_path = f"daily-pm25-{run_timestamp}.csv"
+    station_list_path = f"station-list-{run_timestamp}.csv"
 
     df.to_csv(raw_path, index=False)
     print(f"Raw data saved to {raw_path}")
