@@ -2,6 +2,7 @@ import collections
 import os
 
 import numpy as np
+import pandas as pd
 from loguru import logger
 from matplotlib import pyplot as plt
 from sklearn.model_selection import GridSearchCV, GroupKFold, KFold, RandomizedSearchCV
@@ -152,7 +153,7 @@ def get_cv(c, seed=settings.SEED):
         return GridSearchCV(pipe, params, scoring=scoring, **cv_params)
 
 
-def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5, out_dir=None):
+def nested_cv(c: ExperimentConfig, df, X, y, seed=settings.SEED, k=5, out_dir=None):
 
     outer_cv = KFold(n_splits=k, shuffle=True, random_state=seed)
     outer_cv_result = {metric: [] for metric in eval_utils.get_scoring()}
@@ -160,11 +161,14 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5, out_dir=None):
     all_y_test = []
     all_y_pred = []
 
+    df_wpreds = pd.DataFrame()
+
     for index, (train_index, test_index) in enumerate(outer_cv.split(X)):
 
         logger.info(f"Running Outer Fold: {index}")
         logger.info(f"Train length: {len(train_index)}")
 
+        X_test_cv = df.loc[test_index]
         X_train, X_test = X.loc[train_index], X.loc[test_index]
         y_train, y_test = y[train_index], y[test_index]
 
@@ -173,6 +177,15 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5, out_dir=None):
 
         y_pred = inner_cv.best_estimator_.predict(X_test)
         result = eval_utils.evaluate(y_test, y_pred)
+
+        # Attaching predicted values to test set
+        df_fold = X_test_cv.copy()
+        df_fold["fold"] = index
+        df_fold["actual"] = y_test
+        df_fold["predicted"] = y_pred
+
+        # Appending test set for all folds
+        df_wpreds = pd.concat([df_wpreds, df_fold], axis=0)
 
         # Accumulate all the y_test and y_pred pairs for producing combined scatterplot.
         all_y_test.extend(y_test)
@@ -197,6 +210,8 @@ def nested_cv(c: ExperimentConfig, X, y, seed=settings.SEED, k=5, out_dir=None):
         fig.savefig(os.path.join(out_dir, "scatterplot_nestedcv_combined.png"))
         plt.clf()
 
+        df_wpreds.to_csv(os.path.join(out_dir, "nestedcv_fold_combined.csv"))
+
     return dict(collections.ChainMap(*[mean_results, outer_cv_result]))
 
 
@@ -216,12 +231,14 @@ def spatial_cv(c, df, X, y, k=5, out_dir=None):
     all_y_test = []
     all_y_pred = []
 
+    df_wpreds = pd.DataFrame()
+
     for idx, train_index, test_index in zip(index, train_indices, test_indices):
 
         logger.info(f"Running Spatial Outer Fold: {idx}")
         logger.info(f"Train length: {len(train_index)}")
 
-        X_train_cv = df.loc[train_index]
+        X_train_cv, X_test_cv = df.loc[train_index], df.loc[test_index]
         X_train, X_test = X.loc[train_index], X.loc[test_index]
         y_train, y_test = y[train_index], y[test_index]
 
@@ -241,6 +258,15 @@ def spatial_cv(c, df, X, y, k=5, out_dir=None):
 
         y_pred = inner_cv.best_estimator_.predict(X_test)
         result = eval_utils.evaluate(y_test, y_pred)
+
+        # Attaching predicted values to test set
+        df_fold = X_test_cv.copy()
+        df_fold["fold"] = idx
+        df_fold["actual"] = y_test
+        df_fold["predicted"] = y_pred
+
+        # Appending test set for all folds
+        df_wpreds = pd.concat([df_wpreds, df_fold], axis=0)
 
         # Accumulate all the y_test and y_pred pairs for producing combined scatterplot.
         all_y_test.extend(y_test)
@@ -264,5 +290,7 @@ def spatial_cv(c, df, X, y, k=5, out_dir=None):
         fig = eval_utils.plot_actual_vs_predicted(all_y_test, all_y_pred)
         fig.savefig(os.path.join(out_dir, "scatterplot_nestedspatialcv_combined.png"))
         plt.clf()
+
+        df_wpreds.to_csv(os.path.join(out_dir, "spatial_fold_combined.csv"))
 
     return dict(collections.ChainMap(*[mean_results, outer_cv_result]))
