@@ -128,7 +128,7 @@ If you wish to generate your own custom dataset (e.g. generate dataset for a dif
     python scripts/collect_openaq.py \
 	--start-date=2021-01-01 \
 	--end-date=2021-12-31
-	--country-code=TH`
+	--country-code=TH
     ```
     * This script will do a bit of pre-processing and generate 2 csv files in your `data/` folder (`<timestamp>` is the datetime you ran the script):
         * `daily-pm25-<timestamp>.csv`
@@ -142,7 +142,7 @@ If you wish to generate your own custom dataset (e.g. generate dataset for a dif
     * Sign-up for a [Google Earth Engine account](https://signup.earthengine.google.com/) if you don't have one yet, as the script uses the GEE API to collect some of the features. It will ask you to log-in when you run it.
     * Finally, run the script with the appropriate parameters. The ff. is an example, but you should change the `--locations-csv` and `--ground-truth-csv` arguments accordingly to the files generated from step 1:
     ```
-    export PYTHONPATH=. && python scripts/generate_data.py \
+    export PYTHONPATH=. && python scripts/generate_features.py \
 	--locations-csv=data/2022-05-06-openaq-th-stations.csv \
 	--ground-truth-csv=data/2022-05-06-openaq-daily-pm25.csv \
 	--admin-bounds-shp=data/tha_admin_bounds_adm3/tha_admbnda_adm3_rtsd_20220121.shp \
