@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import traceback
 from datetime import datetime
 
@@ -75,12 +76,11 @@ def train(config_path):
         os.makedirs(out_dir, exist_ok=True)
 
     # Model Training and Evaluation #
-    nested_cv_results = model_utils.nested_cv(config.dict(), X, y, out_dir=out_dir)
+    nested_cv_results = model_utils.nested_cv(
+        config.dict(), final_df, X, y, out_dir=out_dir
+    )
     logger.info(f"\nNested CV results: {json.dumps(nested_cv_results, indent=4)}")
 
-    # spatial_cv_results = model_utils.spatial_cv(
-    #     config.dict(), reduced_df, X, y, out_dir=out_dir
-    # )
     spatial_cv_results = model_utils.spatial_cv(
         config.dict(), final_df, X, y, out_dir=out_dir
     )
@@ -107,17 +107,34 @@ def train(config_path):
             X_transformed = transformation.transform(X_transformed)
 
         # TODO make code automatically pick the right explainer based on the model type
-        explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(X_transformed)
+        # existing models in pipeline: lgbm, lr, rf, svr, xgb
+        model_class = re.split(r"\W+", str(model.__class__))[-2]
+        logger.info(f"model class: {model_class}")
+
+        if model_class in ["LGBMRegressor", "XGBRegressor"]:
+            explainer = shap.TreeExplainer(model)
+            shap_values = explainer.shap_values(X_transformed)
+
+        elif model_class in ["RandomForestRegressor"]:
+            X_trans_df = pd.DataFrame(X_transformed)
+            explainer = shap.TreeExplainer(model)
+            shap_values = explainer.shap_values(X_trans_df)
+
+        elif model_class in ["SVR"]:
+            explainer = shap.KernelExplainer(
+                model.predict, data=shap.sample(X_transformed, 5000)
+            )
+            shap_values = explainer.shap_values(shap.sample(X_transformed, 5000))
+
+        elif model_class in ["LinearRegression"]:
+            masker = shap.maskers.Independent(data=X_transformed)
+            explainer = shap.LinearExplainer(model, masker=masker)
+            shap_values = explainer.shap_values(X_transformed)
+
         shap_df = pd.DataFrame(shap_values).set_axis(X.columns, axis=1)
 
         # Save Feature Importance -  (simplified shap plot - similar to SHAP's bar chart but colored accdg to correlation)
-        eval_utils.generate_simplified_shap(
-            shap_df,
-            X,
-            out_dir
-            # out_dir / "shap_summary_custom_bar.png"
-        )
+        eval_utils.generate_simplified_shap(shap_df, X, out_dir)
 
         # Save Feature Importance -  (raw SHAP summary plots)
         shap.summary_plot(shap_values, features=X, show=False)
