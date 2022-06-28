@@ -72,7 +72,6 @@ def collect_features_for_locations(
     gee_datasets=[
         S5P_AAI_CONFIG,
         CAMS_AOD_CONFIG,
-        MAIAC_AOD_CONFIG,
         NDVI_CONFIG,
         ERA5_CONFIG,
     ],
