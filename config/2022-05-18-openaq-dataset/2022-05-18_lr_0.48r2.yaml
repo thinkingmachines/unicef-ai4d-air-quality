@@ -1,0 +1,40 @@
+data_params:
+  csv_path: data/2022-05-18-base-table-openaq-filt.csv
+  target_col: pm2.5
+  # Specify either include_cols or ignore_cols (leave one empty). If both are specified, include_cols will be prioritized.
+  include_cols:
+    # AOD
+    - CAMS_AOD_055_mean
+    # Other env. factors: vegetation
+    - EVI_mean
+    # Human-related
+    - total_population
+    # Meteorological variables
+    - dewpoint_temperature_2m_mean
+    - temperature_2m_mean
+    - u_component_of_wind_10m_mean
+    - v_component_of_wind_10m_mean
+    - surface_pressure_mean
+    - total_precipitation_daily
+    - AAI_mean
+    - mean_precipitation_hourly
+  impute_cols:
+  # impute strategy from Simple Imputer ("mean", "median", "most_frequent")
+  impute_strategy: "mean"
+  balance_target_label:
+
+model: LinearRegression
+model_params:
+out_dir: data/outputs/
+selector: VarianceThreshold
+scalers:
+  - StandardScaler
+cv: TuneSearchCV
+cv_params:
+  refit: sklearn_r2
+  n_trials: 1
+  verbose: 1
+  early_stopping: false
+  cv:
+spatial_cv_params:
+  groups: ADM1_PCODE
