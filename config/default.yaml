@@ -4,8 +4,6 @@ data_params:
   # Specify either include_cols or ignore_cols (leave one empty). If both are specified, include_cols will be prioritized.
   include_cols:
     # AOD
-    # - AOD_047_mean
-    # - AOD_055_mean
     - CAMS_AOD_055_mean
     # Other env. factors: vegetation
     - EVI_mean
@@ -24,10 +22,8 @@ data_params:
   # impute strategy from Simple Imputer ("mean", "median", "most_frequent")
   impute_strategy: "mean"
   balance_target_label:
-  # ADM1_PCODE
 
-model: RandomForestRegressor
-# XGBRegressor
+model: XGBRegressor
 model_params:
 out_dir: data/outputs/
 selector: VarianceThreshold

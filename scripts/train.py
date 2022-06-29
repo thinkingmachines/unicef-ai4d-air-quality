@@ -107,7 +107,7 @@ def train(config_path):
             X_transformed = transformation.transform(X_transformed)
 
         # TODO make code automatically pick the right explainer based on the model type
-        # existing models in pipeline: lgbm, lr, rf, svr, xgb
+        # existing models in pipeline: lgbm, lr, xgb
         model_class = re.split(r"\W+", str(model.__class__))[-2]
         logger.info(f"model class: {model_class}")
 
@@ -115,23 +115,14 @@ def train(config_path):
             explainer = shap.TreeExplainer(model)
             shap_values = explainer.shap_values(X_transformed)
 
-        elif model_class in ["RandomForestRegressor"]:
-            X_trans_df = pd.DataFrame(X_transformed)
-            explainer = shap.TreeExplainer(model)
-            shap_values = explainer.shap_values(X_trans_df)
-
-        elif model_class in ["SVR"]:
-            explainer = shap.KernelExplainer(
-                model.predict, data=shap.sample(X_transformed, 5000)
-            )
-            shap_values = explainer.shap_values(shap.sample(X_transformed, 5000))
+            shap_df = pd.DataFrame(shap_values).set_axis(X.columns, axis=1)
 
         elif model_class in ["LinearRegression"]:
             masker = shap.maskers.Independent(data=X_transformed)
             explainer = shap.LinearExplainer(model, masker=masker)
             shap_values = explainer.shap_values(X_transformed)
 
-        shap_df = pd.DataFrame(shap_values).set_axis(X.columns, axis=1)
+            shap_df = pd.DataFrame(shap_values).set_axis(X.columns, axis=1)
 
         # Save Feature Importance -  (simplified shap plot - similar to SHAP's bar chart but colored accdg to correlation)
         eval_utils.generate_simplified_shap(shap_df, X, out_dir)
