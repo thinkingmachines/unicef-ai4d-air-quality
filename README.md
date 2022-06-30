@@ -157,3 +157,6 @@ If you wish to generate your own custom dataset (e.g. generate dataset for a dif
 We provide a sample notebook for illustrating how one might use a trained model on a location in Thailand. The notebook can be found in the `notebooks/2022-05-18-prediction-example` folder. This notebook contains more explanations, and has some light EDA and viz on sample predictions for a district in Chiang Mai.
 
 There is also a script version for just running predictions on an input CSV file of locations (the expected format of this is described in the notebook). Please run `export PYTHONPATH=. && python scripts/predict.py --help` to see details on the usage.
+
+# Acknowledgements
+This work was supported by the [UNICEF Venture Fund](https://www.unicef.org/innovation/venturefund) in collaboration with the [UNICEF East Asia and Pacific Regional Office (EAPRO)](https://blogs.unicef.org/east-asia-pacific/about/).
