@@ -100,13 +100,14 @@ This workflow assumes you just want to train your own models on already existing
 
 1. Get a copy of the latest dataset in CSV format from our [Google Drive folder](https://drive.google.com/drive/folders/1c4f1TJzW7uI9IgqXZY_08pJb1YvpevG1) and place it in your local `data` folder.
 2. Create a yaml config file with the training configuration that you want inside the `config` folder (see `config/default.yaml` for a sample).
-    * Note: this is where you specify the path to the CSV dataset.
+    * Note: this is where you specify the path to the CSV dataset from step 1.
 3. Make sure your terminal's current working directory is the project root. Run the training script by running `make config-path=config/default.yaml train`, where you should replace `default.yaml` with the actual yaml file you created from step 2.
     * If you can't run Make commands on your system, you can also run the training script manually like this:
         * `export PYTHONPATH=.` (you only need to run this once per terminal sesion)
         * `python scripts/train.py --config-path=config/default.yaml`
             * Note: You can also just call the script without a config path `python scripts/train.py`, in which case it will use `config/default.yaml`.
 4. The training script should have generated results in a dated folder under `data/outputs`. The folder should contain the best model and its params, metrics, SHAP charts, and the yaml config file used.
+
 
 <br/>
 <br/>
