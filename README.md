@@ -10,7 +10,9 @@
 
 # 📜 Description
 
-Repository for UNICEF AI4D air quality research. Goal is to train models that can predict ground-level PM2.5 for areas with no ground-monitoring stations using satellite-derived data (e.g. Aerosol Optical Depth, Meteorological Variables, NDVI, etc) and other datasets (e.g. population).
+Repository for UNICEF AI4D air quality research. The goal is to train models that can predict ground-level PM2.5 for areas with no ground-monitoring stations using satellite-derived data (e.g. Aerosol Optical Depth, Meteorological Variables, NDVI, etc) and other datasets (e.g. population).
+
+Read more about the study in our [manuscript](https://drive.google.com/file/d/1lzGiUWpQ_vzyvY9FfDjWEH21Hiu-H9lz/view?usp=sharing).
 
 
 <br/>
