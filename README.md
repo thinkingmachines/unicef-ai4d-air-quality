@@ -10,7 +10,16 @@
 
 # 📜 Description
 
-Repository for UNICEF AI4D air quality research. The goal is to train models that can predict ground-level PM2.5 for areas with no ground-monitoring stations using satellite-derived data (e.g. Aerosol Optical Depth, Meteorological Variables, NDVI, etc) and other datasets (e.g. population).
+This project explored PM2.5 estimation using Machine Learning models in Thailand. Air pollution is a pressing health concern worldwide, and thus, its monitoring is important for epidemological studies and informing public policy.
+
+However, ground sensors (whether reference grade or low-cost) are sparse. For example, in Mueang Chiang Mai, there are only a few air quality sensors based on [OpenAQ](https://openaq.org/#/) data.
+
+
+Using Machine Learning models to predict PM2.5 levels based on area predictors is a potential way to augment these ground stations, and allows us to monitor air quality even in areas without them.
+
+![Mueang Chiang Mai Ground Sensors and Daily Model Predictions, Averaged in July 2021](/assets/fill_the_gap.png)
+
+
 
 Read more about the study in our [manuscript](https://drive.google.com/file/d/1lzGiUWpQ_vzyvY9FfDjWEH21Hiu-H9lz/view?usp=sharing).
 
@@ -159,6 +168,12 @@ If you wish to generate your own custom dataset (e.g. generate dataset for a dif
 We provide a sample notebook for illustrating how one might use a trained model on a location in Thailand. The notebook can be found in the `notebooks/2022-05-18-prediction-example` folder. This notebook contains more explanations, and has some light EDA and viz on sample predictions for a district in Chiang Mai.
 
 There is also a script version for just running predictions on an input CSV file of locations (the expected format of this is described in the notebook). Please run `export PYTHONPATH=. && python scripts/predict.py --help` to see details on the usage.
+
+
+![Mueang Chiang Mai Daily Model Predictions, Averaged per Month for 2021](/assets/model_predictions_throughout_year.gif)
+
+*Mueang Chiang Mai Daily Model Predictions, Averaged Monthly for 2021*
+
 
 # Acknowledgements
 This work was supported by the [UNICEF Venture Fund](https://www.unicef.org/innovation/venturefund) in collaboration with the [UNICEF East Asia and Pacific Regional Office (EAPRO)](https://blogs.unicef.org/east-asia-pacific/about/).
