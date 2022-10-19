@@ -24,6 +24,9 @@ Using Machine Learning models to predict PM2.5 levels based on area predictors i
 Read more about the study in our [manuscript](https://drive.google.com/file/d/1lzGiUWpQ_vzyvY9FfDjWEH21Hiu-H9lz/view?usp=sharing).
 
 
+This project is part of the upcoming [AI4D Research Bank](https://thinkingmachin.es/ai4d-research-bank/) that aims to support data scientists working at the intersection of machine learning (ML) and development. Check it out for other resources!
+
+
 <br/>
 <br/>
 
