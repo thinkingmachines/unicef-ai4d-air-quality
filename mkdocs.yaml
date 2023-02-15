@@ -1,0 +1,7 @@
+site_name: 'Unicef AI4D Air Quality'
+
+nav:
+  - Introduction: 'README.md'
+  
+plugins:
+  - techdocs-core
