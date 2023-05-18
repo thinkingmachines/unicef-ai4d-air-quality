@@ -1,7 +1,7 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: unicef-ai4d-airquality
+  name: unicef-ai4d-air-quality
   title: Unicef AI4D Air Quality Research
   description: Repository for exploratory research on estimating PM2.5 levels in Thailand based on geospatial indicators.
   annotations:
