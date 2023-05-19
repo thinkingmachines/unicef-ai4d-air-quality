@@ -1,0 +1,25 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: unicef-ai4d-air-quality
+  title: Unicef AI4D Air Quality Research
+  description: Repository for exploratory research on estimating PM2.5 levels in Thailand based on geospatial indicators.
+  annotations:
+    github.com/project-slug: thinkingmachines/unicef-ai4d-air-quality
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - geo-ai
+    - ml
+    - general-prediction
+    - python
+  links:
+    - url: https://thinkdatasci.slack.com/archives/C03A2R6C9UK
+      title: Slack - Project Channel
+      icon: chat
+    - url: https://drive.google.com/drive/u/0/folders/1LvLtV7MW7Mh3CsONSOGLDJxaXYe2Xjyo
+      title: Research Paper
+      icon: docs
+spec:
+  owner: user:default/alronlam
+  lifecycle: concluded
+  type: open-source
